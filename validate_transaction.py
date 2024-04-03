@@ -2,7 +2,7 @@ import binascii
 import json
 from typing import List, Dict
 import hashlib
-import ecdsa
+# import ecdsa
 import bech32
 import base58
 
