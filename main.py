@@ -120,13 +120,25 @@ def mine_block(block: Dict, difficulty_target: int) -> Dict:
 def output_to_file(block_header: Dict, transactions: List[Dict]):
     with open('output.txt', 'w') as file:
         # Write the block header
-        file.write(json.dumps(block_header) + "\n")
+        header_bytes = (
+            block_header['version'].to_bytes(4, 'little') +
+            bytes.fromhex(block_header['previous_block_hash']) +
+            bytes.fromhex(block_header['merkle_root']) +
+            block_header['time'].to_bytes(4, 'little') +
+            block_header['bits'].to_bytes(4, 'little') +
+            block_header['nonce'].to_bytes(4, 'little')
+        )
+        header_hex = header_bytes.hex()
+        file.write(header_hex + "\n")
+
         # Write the coinbase transaction 
         file.write(json.dumps(transactions[0]) + "\n")
+
         # Write the txids of all transactions (excluding the coinbase transaction)
         for tx in transactions[1:]:
             for vin in tx['vin']:
                 file.write(vin["txid"] + "\n")
+
 
 
 def main():
