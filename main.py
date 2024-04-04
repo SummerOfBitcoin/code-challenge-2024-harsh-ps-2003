@@ -107,18 +107,15 @@ def construct_block(transactions: List[Dict], miner_address: str, block_height: 
     return block
 
 def mine_block(block: Dict, difficulty_target: int) -> Dict:
-    difficulty_target_bytes = difficulty_target.to_bytes(32, byteorder='big')  # Convert difficulty target to bytes
-
     nonce = 0
     while True:
         block['header']['nonce'] = nonce
         block_string = json.dumps(block, sort_keys=True)
-        block_hash = hashlib.sha256(block_string.encode()).digest()  # Use digest instead of hexdigest
-        if block_hash < difficulty_target_bytes:  # Compare binary hashes directly
-            block['header']['hash'] = block_hash.hex()
+        block_hash = hashlib.sha256(block_string.encode()).hexdigest()
+        if int(block_hash, 16) < difficulty_target:
+            block['header']['hash'] = block_hash
             return block
         nonce += 1
-
 
 def output_to_file(block_header: Dict, transactions: List[Dict]):
     with open('output.txt', 'w') as file:
