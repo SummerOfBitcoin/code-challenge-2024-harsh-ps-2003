@@ -139,8 +139,6 @@ def output_to_file(block_header: Dict, transactions: List[Dict]):
             for vin in tx['vin']:
                 file.write(vin["txid"] + "\n")
 
-
-
 def main():
     transactions = read_transactions("mempool")
     # print(yes)
