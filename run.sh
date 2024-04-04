@@ -1,7 +1,7 @@
 # Summer of Bitcoin 2024 : Mine you first Bitcoin
 
 # Install required libraries
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 
 # Run the main.py script
-python main.py
+python3 main.py

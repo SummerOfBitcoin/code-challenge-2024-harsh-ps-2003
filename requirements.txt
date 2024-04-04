@@ -1,4 +1,3 @@
 base58
 bech32
-binascii
 ripemd-hash
