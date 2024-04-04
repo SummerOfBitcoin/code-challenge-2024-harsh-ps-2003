@@ -92,7 +92,7 @@ def construct_block(transactions: List[Dict], miner_address: str, block_height: 
     block_header = {
         "version": 1,
         "previous_block_hash": "0" * 64,  # Placeholder for the previous block hash
-        # No Merkle root included
+        "merkle_root": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
         "time": int(time.time()),  # Placeholder for the block's timestamp
         "bits": 0x1d00ffff,  # Placeholder for the difficulty target
         "nonce": 0  # Placeholder for the nonce
