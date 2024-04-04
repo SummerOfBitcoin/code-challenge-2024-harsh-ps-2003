@@ -3,6 +3,7 @@ import json
 from typing import List, Dict
 import hashlib
 # import ecdsa
+from ripemd.ripemd160 import ripemd160
 import bech32
 import base58
 
@@ -241,7 +242,7 @@ def verify_unlocking_script(vin: List[Dict], vout: List[Dict], filename: str) ->
             signature = witness[0]
             if public_key:
               hashed_public_key_sha256 = hashlib.sha256(bytes.fromhex(public_key)).digest()
-              hashed_public_key_ripemd160 = hashlib.new('ripemd160', hashed_public_key_sha256).digest()
+              hashed_public_key_ripemd160 = ripemd160(hashed_public_key_sha256)
               hashed_public_key_ripemd160_hex = binascii.hexlify(hashed_public_key_ripemd160).decode()
               if hashed_public_key_ripemd160_hex == pubkey_hash and verify_txid(json.loads(raw_transaction), data, filename):
                 #   return verify_signature(raw_transaction)
@@ -266,7 +267,7 @@ def verify_unlocking_script(vin: List[Dict], vout: List[Dict], filename: str) ->
                 return True
             public_key_hash = scriptpubkey_asm.split(" ")[-3]
             hashed_public_key_sha256 = hashlib.sha256(bytes.fromhex(publickey)).digest()
-            hashed_public_key_ripemd160 = hashlib.new('ripemd160', hashed_public_key_sha256).digest()
+            hashed_public_key_ripemd160 = ripemd160(hashed_public_key_sha256)
             hashed_public_key_ripemd160_hex = binascii.hexlify(hashed_public_key_ripemd160).decode()
             if hashed_public_key_ripemd160_hex != public_key_hash:
                 return False  # If any input has an invalid unlocking script

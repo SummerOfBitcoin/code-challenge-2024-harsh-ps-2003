@@ -9,15 +9,19 @@ DIFFICULTY_TARGET = 0x0000FFFF00000000000000000000000000000000000000000000000000
 MAX_BLOCK_SIZE = 1000000  # 1 MB
 
 valid_transactions = []
-
+# no = 0
+# yes = 0
 def read_transactions(mempool_dir: str) -> List[Dict]:
+    global no, yes
     for filename in os.listdir(mempool_dir):
         if filename.endswith('.json'):
             filepath = os.path.join(mempool_dir, filename)
+            # no = no + 1
             with open(filepath, 'r') as file:
                 transaction_data = json.load(file)
                 if verify_transaction(transaction_data, filename):
                     valid_transactions.append(transaction_data)
+                    # yes = yes + 1
     return select_transactions_based_on_fees(valid_transactions, MAX_BLOCK_SIZE)
 
 def calculate_transaction_size(transaction: Dict) -> int:
@@ -127,6 +131,8 @@ def output_to_file(block_header: Dict, transactions: List[Dict]):
 
 def main():
     transactions = read_transactions("mempool")
+    # print(yes)
+    # print(no)
     block = construct_block(transactions, "123456789abcdefgh", 0)
     mined_block = mine_block(block, DIFFICULTY_TARGET)
     output_to_file(mined_block['header'], transactions)
