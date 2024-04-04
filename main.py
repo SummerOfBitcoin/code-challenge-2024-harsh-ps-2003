@@ -112,10 +112,11 @@ def mine_block(block: Dict, difficulty_target: int) -> Dict:
     while nonce < max_nonce:
         block['header']['nonce'] = nonce
         block_string = json.dumps(block, sort_keys=True)
-        block_hash = hashlib.sha256(block_string.encode()).hexdigest()
-        if int(block_hash, 16) < difficulty_target:
-            block['header']['hash'] = block_hash
-            print(f"Block successfully mined with nonce: {nonce}, hash: {block_hash}")
+        block_hash = hashlib.sha256(block_string.encode()).digest()
+        block_hash_int = int.from_bytes(block_hash, byteorder='big')  # Convert hash to integer using big-endian byte order
+        if block_hash_int < difficulty_target:
+            block['header']['hash'] = block_hash.hex()
+            print(f"Block successfully mined with nonce: {nonce}, hash: {block['header']['hash']}")
             return block
         nonce += 1
     raise ValueError("Failed to mine block: exceeded max nonce without finding a valid hash")
