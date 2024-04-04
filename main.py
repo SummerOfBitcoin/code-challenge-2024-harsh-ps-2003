@@ -108,14 +108,17 @@ def construct_block(transactions: List[Dict], miner_address: str, block_height: 
 
 def mine_block(block: Dict, difficulty_target: int) -> Dict:
     nonce = 0
-    while True:
+    max_nonce = 2**32  # Maximum value for a 32-bit number
+    while nonce < max_nonce:
         block['header']['nonce'] = nonce
         block_string = json.dumps(block, sort_keys=True)
         block_hash = hashlib.sha256(block_string.encode()).hexdigest()
         if int(block_hash, 16) < difficulty_target:
             block['header']['hash'] = block_hash
+            print(f"Block successfully mined with nonce: {nonce}, hash: {block_hash}")
             return block
         nonce += 1
+    raise ValueError("Failed to mine block: exceeded max nonce without finding a valid hash")
 
 def output_to_file(block_header: Dict, transactions: List[Dict]):
     with open('output.txt', 'w') as file:
