@@ -94,7 +94,7 @@ def construct_block(transactions: List[Dict], miner_address: str, block_height: 
         "previous_block_hash": "0" * 64,  # Placeholder for the previous block hash
         "merkle_root": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
         "time": int(time.time()),  # Placeholder for the block's timestamp
-        "bits": 0x1d00ffff,  # Placeholder for the difficulty target
+        "bits": DIFFICULTY_TARGET,  # Placeholder for the difficulty target
         "nonce": 0  # Placeholder for the nonce
     }
 
@@ -106,33 +106,48 @@ def construct_block(transactions: List[Dict], miner_address: str, block_height: 
 
     return block
 
-def mine_block(block: Dict, difficulty_target: int) -> Dict:
+def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) -> Dict:
     nonce = 0
     max_nonce = 2**32  # Maximum value for a 32-bit number
-    while nonce < max_nonce:
-        block['header']['nonce'] = nonce
-        block_string = json.dumps(block, sort_keys=True)
-        block_hash = hashlib.sha256(block_string.encode()).digest()
-        block_hash_int = int.from_bytes(block_hash, byteorder='big')  # Convert hash to integer using big-endian byte order
-        if block_hash_int < difficulty_target:
-            block['header']['hash'] = block_hash.hex()
-            print(f"Block successfully mined with nonce: {nonce}, hash: {block['header']['hash']}")
-            return block
-        nonce += 1
-    raise ValueError("Failed to mine block: exceeded max nonce without finding a valid hash")
 
-def output_to_file(block_header: Dict, transactions: List[Dict]):
-    with open('output.txt', 'w') as file:
-        # Write the block header
+    # Convert the difficulty target from a 256-bit number to a compact representation
+    # This is a simplified example. In practice, you would need a function to convert
+    # the full 256-bit target to a compact format accurately.
+    bits = difficulty_target.to_bytes(32, 'big')
+    exponent = len(bits)
+    significand = bits[:3]  # Get the first three bytes as the significand
+    compact_target = (exponent << 24) | int.from_bytes(significand, 'big')
+
+    while nonce < max_nonce:
+        block_header = block['header']
+        block_header['nonce'] = nonce
+
+        # Serialize the block header
         header_bytes = (
             block_header['version'].to_bytes(4, 'little') +
             bytes.fromhex(block_header['previous_block_hash']) +
             bytes.fromhex(block_header['merkle_root']) +
             block_header['time'].to_bytes(4, 'little') +
-            block_header['bits'].to_bytes(4, 'little') +
+            compact_target.to_bytes(4, 'little') +  # Use the compact representation
             block_header['nonce'].to_bytes(4, 'little')
         )
+        global header_hex
         header_hex = header_bytes.hex()
+        # Calculate hash of the serialized block
+        block_hash = hashlib.sha256(hashlib.sha256(header_bytes).digest()).digest()
+
+        # Check if hash meets difficulty target
+        if int.from_bytes(block_hash, 'big') < difficulty_target:
+            block['header']['hash'] = block_hash.hex()
+            print(f"Block successfully mined with nonce: {nonce}, hash: {block['header']['hash']}")
+            return block
+
+        nonce += 1
+
+    raise ValueError("Failed to mine block: exceeded max nonce without finding a valid hash")
+
+def output_to_file(transactions: List[Dict]):
+    with open('output.txt', 'w') as file:
         file.write(header_hex + "\n")
 
         # Write the coinbase transaction 
@@ -148,8 +163,8 @@ def main():
     # print(yes)
     # print(no)
     block = construct_block(transactions, "123456789abcdefgh", 0)
-    mined_block = mine_block(block, DIFFICULTY_TARGET)
-    output_to_file(mined_block['header'], transactions)
+    mine_block(block, DIFFICULTY_TARGET, transactions)
+    output_to_file(transactions)
 
 if __name__ == "__main__":
     main()
