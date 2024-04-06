@@ -51,18 +51,27 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
         'txid': '0000000000000000000000000000000000000000000000000000000000000000',
         'vout': 0xffffffff,
         'scriptSig': {
-            'asm': f'{block_height}',  # Using block height as per BIP 34
-            'hex': block_height.to_bytes(4, 'little').hex()  # Convert block height to little-endian hex
+            'asm': f'{block_height}',
+            'hex': block_height.to_bytes(4, 'little').hex()
         },
         'sequence': 0xffffffff
     }
 
     # The output of the coinbase transaction sends the block reward to the miner's address
-    vout = {
+    vout_miner_reward = {
         'value': block_reward,
         'scriptPubKey': {
             'asm': f'OP_DUP OP_HASH160 {miner_address} OP_EQUALVERIFY OP_CHECKSIG',
-            'hex': ''  # The hex representation of the scriptPubKey would depend on the actual address format
+            'hex': ''
+        }
+    }
+
+    # Additional output for the witness commitment
+    vout_witness_commitment = {
+        'value': 0,
+        'scriptPubKey': {
+            'asm': 'OP_RETURN <witness commitment>',
+            'hex': ''
         }
     }
 
@@ -70,7 +79,7 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
     coinbase_tx = {
         'version': 1,
         'inputs': [vin],
-        'outputs': [vout],
+        'outputs': [vout_miner_reward, vout_witness_commitment],  # Add the witness commitment output
         'locktime': 0
     }
 
@@ -109,24 +118,30 @@ def createpreviousblockhash() -> bytes:
     reversed_hash_bytes = greater_hash_bytes[::-1]
     return reversed_hash_bytes
 
-def createmerkleroot() -> bytes:
-    current_directory = os.getcwd()
-    valid_json_path = os.path.join(current_directory, 'valid.json')
-    with open(valid_json_path, 'r') as tx:
-        valid = json.load(tx)
-        txids = [txid.encode() for txid in valid]  # Encode the strings to bytes
-        while len(txids) > 1:
-            next_level = []
-            for i in range(0, len(txids), 2):
-                pair_hash = b''
-                if i + 1 == len(txids):
-                    # In case of an odd number of elements, duplicate the last one
-                    pair_hash = hashlib.sha256(txids[i] + txids[i]).digest()
-                else:
-                    pair_hash = hashlib.sha256(txids[i] + txids[i + 1]).digest()
-                next_level.append(pair_hash)
-            txids = next_level
-        return txids[0]
+def createmerkleroot(transactions: List[Dict]) -> bytes:
+    # Initialize an empty list to store txids
+    txid_list = []
+
+    # Iterate over transactions
+    for tx in transactions[1:]:
+        # Iterate over vin fields in the transaction
+        for vin in tx['vin']:
+            # Append the txid to the list
+            txid_list.append(vin["txid"].encode())  # Encode the strings to bytes
+            
+    while len(txid_list) > 1:
+        next_level = []
+        for i in range(0, len(txid_list), 2):
+            pair_hash = b''
+            if i + 1 == len(txid_list):
+                # In case of an odd number of elements, duplicate the last one
+                pair_hash = hashlib.sha256(txid_list[i] + txid_list[i]).digest()
+            else:
+                pair_hash = hashlib.sha256(txid_list[i] + txid_list[i + 1]).digest()
+            next_level.append(pair_hash)
+        txid_list = next_level
+        
+    return txid_list[0]
 
 def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) -> Dict:
     nonce = 0
@@ -145,7 +160,7 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
         header_bytes = (
             block_header['version'].to_bytes(4, 'little') +
             createpreviousblockhash() +
-            createmerkleroot() +
+            createmerkleroot(transactions) +
             block_header['time'].to_bytes(4, 'little') +
             compact_target.to_bytes(4, 'little') +  # Use the compact representation
             block_header['nonce'].to_bytes(4, 'little')
@@ -173,18 +188,9 @@ def output_to_file(transactions: List[Dict]):
         file.write(json.dumps(transactions[0]) + "\n")
 
         # Write the txids of all transactions (excluding the coinbase transaction)
-        # for tx in transactions[1:]:
-        #     for vin in tx['vin']:
-        #         file.write(vin["txid"] + "\n")
-
-
-        current_directory = os.getcwd()
-        valid_json_path = os.path.join(current_directory, 'valid.json')
-        with open(valid_json_path, 'r') as tx:
-            valid = json.load(tx)
-            print(len(valid))
-            for txid in tx:
-                file.write(txid + "\n")
+        for tx in transactions[1:]:
+            for vin in tx['vin']:
+                file.write(vin["txid"] + "\n")
 
 def main():
     transactions = read_transactions("mempool")
