@@ -113,7 +113,7 @@ def construct_block(transactions: List[Dict], miner_address: str, block_height: 
 def createpreviousblockhash() -> bytes:
     difficulty_target = bytes.fromhex('0000ffff00000000000000000000000000000000000000000000000000000000')
     target_int = int.from_bytes(difficulty_target, 'big')
-    greater_hash_int = target_int + 1
+    greater_hash_int = target_int + 33
     greater_hash_bytes = greater_hash_int.to_bytes(32, 'big')
     reversed_hash_bytes = greater_hash_bytes[::-1]
     return reversed_hash_bytes
