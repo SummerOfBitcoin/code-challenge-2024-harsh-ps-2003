@@ -7,6 +7,8 @@ import time
 
 DIFFICULTY_TARGET = 0x0000FFFF00000000000000000000000000000000000000000000000000000000
 MAX_BLOCK_SIZE = 1000000  # 1 MB
+WITNESS_RESERVED_VALUE = bytes.fromhex('0000000000000000000000000000000000000000000000000000000000000000')
+
 
 valid_transactions = []
 def read_transactions(mempool_dir: str) -> List[Dict]:
@@ -37,57 +39,69 @@ def select_transactions_based_on_fees(transactions, max_block_size):
             break
     return selected_transactions
 
-def create_coinbase_transaction(miner_address: str, block_height: int, block_reward: int) -> dict:
+def create_coinbase_transaction(miner_address: str, block_height: int, block_reward: int, transactions: List[Dict]) -> dict:
+
+    txids_with_witness = []
+    for tx in transactions:
+        for vin in tx['vin']:
+            if vin.get('witness'):
+                txids_with_witness.append(vin['txid'])
+    merkle_root = createmerkleroot(txids_with_witness)
+    concatenated_data = merkle_root + WITNESS_RESERVED_VALUE
+    witness_commitment = hashlib.sha256(hashlib.sha256(concatenated_data).digest()).digest()
     """
     Create a coinbase transaction.
 
     :param miner_address: The address of the miner to receive the block reward.
     :param block_height: The height of the block being mined.
     :param block_reward: The total block reward (block subsidy + transaction fees).
+    :param witness_commitment: The witness commitment hash.
     :return: A dictionary representing the coinbase transaction.
     """
-    # The coinbase transaction's input is always a single input with specific values
-    vin = {
+    # Coinbase transaction's input
+    vin = [{
         'txid': '0000000000000000000000000000000000000000000000000000000000000000',
         'vout': 0xffffffff,
         'scriptSig': {
             'asm': f'{block_height}',
-            'hex': block_height.to_bytes(4, 'little').hex()
+            'hex': block_height.to_bytes(4, 'little').hex() + '...'  # Placeholder for additional data to ensure scriptSig length is valid
         },
-        'sequence': 0xffffffff
-    }
+        'sequence': 0xffffffff,
+        'coinbase': '...'  # Placeholder for coinbase data (e.g., extra nonce and miner-defined data)
+    }]
 
-    # The output of the coinbase transaction sends the block reward to the miner's address
+    # Output for the miner's block reward
     vout_miner_reward = {
         'value': block_reward,
         'scriptPubKey': {
             'asm': f'OP_DUP OP_HASH160 {miner_address} OP_EQUALVERIFY OP_CHECKSIG',
-            'hex': ''
+            'hex': '...'  # Placeholder for the actual hex representation
         }
     }
 
-    # Additional output for the witness commitment
+    # Output for the witness commitment
     vout_witness_commitment = {
         'value': 0,
         'scriptPubKey': {
-            'asm': 'OP_RETURN <witness commitment>',
-            'hex': ''
+            'asm': f'OP_RETURN {witness_commitment.hex()}',
+            'hex': f'6a24aa21a9ed{witness_commitment.hex()}'
         }
     }
 
     # The coinbase transaction itself
     coinbase_tx = {
         'version': 1,
-        'inputs': [vin],
-        'outputs': [vout_miner_reward, vout_witness_commitment],  # Add the witness commitment output
-        'locktime': 0
+        'inputs': vin,
+        'outputs': [vout_miner_reward, vout_witness_commitment],
+        'locktime': 0,
+        'witness': [[WITNESS_RESERVED_VALUE]] # Placeholder for the witness reserved value
     }
 
     return coinbase_tx
 
 def construct_block(transactions: List[Dict], miner_address: str, block_height: int) -> Dict:
     # Create the coinbase transaction
-    coinbase_tx = create_coinbase_transaction(miner_address, block_height, 50)  # Assuming a fixed block reward of 50 BTC
+    coinbase_tx = create_coinbase_transaction(miner_address, block_height, 50, transactions)  # Assuming a fixed block reward of 50 BTC
 
     # Add the coinbase transaction to the beginning of the transactions list
     transactions.insert(0, coinbase_tx)
@@ -110,13 +124,13 @@ def construct_block(transactions: List[Dict], miner_address: str, block_height: 
 
     return block
 
-def createpreviousblockhash() -> bytes:
-    difficulty_target = bytes.fromhex('0000ffff00000000000000000000000000000000000000000000000000000000')
-    target_int = int.from_bytes(difficulty_target, 'big')
-    greater_hash_int = target_int + 33
-    greater_hash_bytes = greater_hash_int.to_bytes(32, 'big')
-    reversed_hash_bytes = greater_hash_bytes[::-1]
-    return reversed_hash_bytes
+# def createpreviousblockhash() -> bytes:
+#     difficulty_target = bytes.fromhex('0000ffff00000000000000000000000000000000000000000000000000000000')
+#     target_int = int.from_bytes(difficulty_target, 'big')
+#     greater_hash_int = target_int + 33
+#     greater_hash_bytes = greater_hash_int.to_bytes(32, 'big')
+#     reversed_hash_bytes = greater_hash_bytes[::-1]
+#     return reversed_hash_bytes
 
 def createmerkleroot(transactions: List[Dict]) -> bytes:
     # Initialize an empty list to store txids
@@ -159,7 +173,7 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
         # Serialize the block header
         header_bytes = (
             block_header['version'].to_bytes(4, 'little') +
-            createpreviousblockhash() +
+            bytes.fromhex(block_header['previous_block_hash']) +
             createmerkleroot(transactions) +
             block_header['time'].to_bytes(4, 'little') +
             compact_target.to_bytes(4, 'little') +  # Use the compact representation
