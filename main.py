@@ -9,19 +9,14 @@ DIFFICULTY_TARGET = 0x0000FFFF00000000000000000000000000000000000000000000000000
 MAX_BLOCK_SIZE = 1000000  # 1 MB
 
 valid_transactions = []
-# no = 0
-# yes = 0
 def read_transactions(mempool_dir: str) -> List[Dict]:
-    global no, yes
     for filename in os.listdir(mempool_dir):
         if filename.endswith('.json'):
             filepath = os.path.join(mempool_dir, filename)
-            # no = no + 1
             with open(filepath, 'r') as file:
                 transaction_data = json.load(file)
                 if verify_transaction(transaction_data, filename):
                     valid_transactions.append(transaction_data)
-                    # yes = yes + 1
     return select_transactions_based_on_fees(valid_transactions, MAX_BLOCK_SIZE)
 
 def calculate_transaction_size(transaction: Dict) -> int:
@@ -90,8 +85,8 @@ def construct_block(transactions: List[Dict], miner_address: str, block_height: 
 
     # Construct the block header
     block_header = {
-        "version": 1,
-        "previous_block_hash": "0" * 64,  # Placeholder for the previous block hash
+        "version": 4,
+        "previous_block_hash": "0"*64,  # Placeholder for the previous block hash
         "merkle_root": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
         "time": int(time.time()),  # Placeholder for the block's timestamp
         "bits": DIFFICULTY_TARGET,  # Placeholder for the difficulty target
@@ -106,13 +101,37 @@ def construct_block(transactions: List[Dict], miner_address: str, block_height: 
 
     return block
 
+def createpreviousblockhash() -> bytes:
+    difficulty_target = bytes.fromhex('0000ffff00000000000000000000000000000000000000000000000000000000')
+    target_int = int.from_bytes(difficulty_target, 'big')
+    greater_hash_int = target_int + 1
+    greater_hash_bytes = greater_hash_int.to_bytes(32, 'big')
+    reversed_hash_bytes = greater_hash_bytes[::-1]
+    return reversed_hash_bytes
+
+def createmerkleroot() -> bytes:
+    current_directory = os.getcwd()
+    valid_json_path = os.path.join(current_directory, 'valid.json')
+    with open(valid_json_path, 'r') as tx:
+        valid = json.load(tx)
+        txids = [txid.encode() for txid in valid]  # Encode the strings to bytes
+        while len(txids) > 1:
+            next_level = []
+            for i in range(0, len(txids), 2):
+                pair_hash = b''
+                if i + 1 == len(txids):
+                    # In case of an odd number of elements, duplicate the last one
+                    pair_hash = hashlib.sha256(txids[i] + txids[i]).digest()
+                else:
+                    pair_hash = hashlib.sha256(txids[i] + txids[i + 1]).digest()
+                next_level.append(pair_hash)
+            txids = next_level
+        return txids[0]
+
 def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) -> Dict:
     nonce = 0
     max_nonce = 2**32  # Maximum value for a 32-bit number
 
-    # Convert the difficulty target from a 256-bit number to a compact representation
-    # This is a simplified example. In practice, you would need a function to convert
-    # the full 256-bit target to a compact format accurately.
     bits = difficulty_target.to_bytes(32, 'big')
     exponent = len(bits)
     significand = bits[:3]  # Get the first three bytes as the significand
@@ -125,8 +144,8 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
         # Serialize the block header
         header_bytes = (
             block_header['version'].to_bytes(4, 'little') +
-            bytes.fromhex(block_header['previous_block_hash']) +
-            bytes.fromhex(block_header['merkle_root']) +
+            createpreviousblockhash() +
+            createmerkleroot() +
             block_header['time'].to_bytes(4, 'little') +
             compact_target.to_bytes(4, 'little') +  # Use the compact representation
             block_header['nonce'].to_bytes(4, 'little')
@@ -135,9 +154,9 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
         header_hex = header_bytes.hex()
         # Calculate hash of the serialized block
         block_hash = hashlib.sha256(hashlib.sha256(header_bytes).digest()).digest()
-
+        reversed_block_hash = block_hash[::-1]
         # Check if hash meets difficulty target
-        if int.from_bytes(block_hash, 'big') < difficulty_target:
+        if int.from_bytes(reversed_block_hash, 'big') < difficulty_target:
             block['header']['hash'] = block_hash.hex()
             print(f"Block successfully mined with nonce: {nonce}, hash: {block['header']['hash']}")
             return block
@@ -154,14 +173,21 @@ def output_to_file(transactions: List[Dict]):
         file.write(json.dumps(transactions[0]) + "\n")
 
         # Write the txids of all transactions (excluding the coinbase transaction)
-        for tx in transactions[1:]:
-            for vin in tx['vin']:
-                file.write(vin["txid"] + "\n")
+        # for tx in transactions[1:]:
+        #     for vin in tx['vin']:
+        #         file.write(vin["txid"] + "\n")
+
+
+        current_directory = os.getcwd()
+        valid_json_path = os.path.join(current_directory, 'valid.json')
+        with open(valid_json_path, 'r') as tx:
+            valid = json.load(tx)
+            print(len(valid))
+            for txid in tx:
+                file.write(txid + "\n")
 
 def main():
     transactions = read_transactions("mempool")
-    # print(yes)
-    # print(no)
     block = construct_block(transactions, "123456789abcdefgh", 0)
     mine_block(block, DIFFICULTY_TARGET, transactions)
     output_to_file(transactions)
