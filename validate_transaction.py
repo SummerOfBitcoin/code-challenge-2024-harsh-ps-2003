@@ -82,77 +82,77 @@ def validate_inputs(vin: List[Dict], vout: List[Dict]) -> int:
     # Ensure input sum is greater than or equal to output sum
     return input_sum - output_sum # diff is fee
 
-def serialize_transaction_txid(tx: Dict, tx_input_index: int) -> str:
-    def int_to_little_endian(value: int, length: int) -> bytes:
-        """Convert integer to little endian bytes of specified length."""
-        return value.to_bytes(length, byteorder='little')
+# def serialize_transaction_txid(tx: Dict, tx_input_index: int) -> str:
+#     def int_to_little_endian(value: int, length: int) -> bytes:
+#         """Convert integer to little endian bytes of specified length."""
+#         return value.to_bytes(length, byteorder='little')
 
-    def varint(n: int) -> bytes:
-        """Encode number as varint."""
-        if n < 0xfd:
-            return int_to_little_endian(n, 1)
-        elif n <= 0xffff:
-            return b'\xfd' + int_to_little_endian(n, 2)
-        elif n <= 0xffffffff:
-            return b'\xfe' + int_to_little_endian(n, 4)
-        else:
-            return b'\xff' + int_to_little_endian(n, 8)
+#     def varint(n: int) -> bytes:
+#         """Encode number as varint."""
+#         if n < 0xfd:
+#             return int_to_little_endian(n, 1)
+#         elif n <= 0xffff:
+#             return b'\xfd' + int_to_little_endian(n, 2)
+#         elif n <= 0xffffffff:
+#             return b'\xfe' + int_to_little_endian(n, 4)
+#         else:
+#             return b'\xff' + int_to_little_endian(n, 8)
 
-    serialized_tx = b''
+#     serialized_tx = b''
 
-    # Serialize transaction version (little endian)
-    serialized_tx += int_to_little_endian(tx['version'], 4)
+#     # Serialize transaction version (little endian)
+#     serialized_tx += int_to_little_endian(tx['version'], 4)
 
-    # Serialize number of inputs (as single byte)
-    serialized_tx += varint(len(tx['vin']))
+#     # Serialize number of inputs (as single byte)
+#     serialized_tx += varint(len(tx['vin']))
 
-    # Iterate over each input
-    for input_index, vin in enumerate(tx['vin']):
-        # Reverse txid bytes
-        txid_bytes_reversed = bytearray.fromhex(vin['txid'])[::-1]
+#     # Iterate over each input
+#     for input_index, vin in enumerate(tx['vin']):
+#         # Reverse txid bytes
+#         txid_bytes_reversed = bytearray.fromhex(vin['txid'])[::-1]
         
-        # Append txid (reversed)
-        serialized_tx += txid_bytes_reversed
+#         # Append txid (reversed)
+#         serialized_tx += txid_bytes_reversed
         
-        # Append vout (little endian)
-        serialized_tx += int_to_little_endian(vin['vout'], 4)
+#         # Append vout (little endian)
+#         serialized_tx += int_to_little_endian(vin['vout'], 4)
 
-        # Append scriptSig length or 0 if not the current input
-        if input_index == tx_input_index:
-            scriptSig_bytes = bytes.fromhex(vin.get('scriptsig', ''))
-            serialized_tx += varint(len(scriptSig_bytes)) + scriptSig_bytes
-        else:
-            serialized_tx += b'\x00'
+#         # Append scriptSig length or 0 if not the current input
+#         if input_index == tx_input_index:
+#             scriptSig_bytes = bytes.fromhex(vin.get('scriptsig', ''))
+#             serialized_tx += varint(len(scriptSig_bytes)) + scriptSig_bytes
+#         else:
+#             serialized_tx += b'\x00'
 
-        # Append sequence (little endian)
-        serialized_tx += int_to_little_endian(vin['sequence'], 4)
+#         # Append sequence (little endian)
+#         serialized_tx += int_to_little_endian(vin['sequence'], 4)
 
-    # Serialize number of outputs (as single byte)
-    serialized_tx += varint(len(tx['vout']))
+#     # Serialize number of outputs (as single byte)
+#     serialized_tx += varint(len(tx['vout']))
 
-    # Iterate over each output
-    for tx_output in tx['vout']:
-        # Append output value (little endian)
-        serialized_tx += int_to_little_endian(tx_output['value'], 8)
+#     # Iterate over each output
+#     for tx_output in tx['vout']:
+#         # Append output value (little endian)
+#         serialized_tx += int_to_little_endian(tx_output['value'], 8)
 
-        # Decode scriptPubKey bytes from hex
-        script_pubkey_bytes = bytes.fromhex(tx_output['scriptpubkey'])
+#         # Decode scriptPubKey bytes from hex
+#         script_pubkey_bytes = bytes.fromhex(tx_output['scriptpubkey'])
 
-        # Append scriptPubKey length (as varint)
-        serialized_tx += varint(len(script_pubkey_bytes))
+#         # Append scriptPubKey length (as varint)
+#         serialized_tx += varint(len(script_pubkey_bytes))
 
-        # Append scriptPubKey bytes
-        serialized_tx += script_pubkey_bytes
+#         # Append scriptPubKey bytes
+#         serialized_tx += script_pubkey_bytes
 
-    # Serialize locktime (little endian)
-    serialized_tx += int_to_little_endian(tx['locktime'], 4)
+#     # Serialize locktime (little endian)
+#     serialized_tx += int_to_little_endian(tx['locktime'], 4)
 
-    return serialized_tx.hex()
+#     return serialized_tx.hex()
 
-def verify_txid(transaction_data: Dict, currentvin: Dict, filename: str) -> bool:
-    serialized_transaction = bytes.fromhex(serialize_transaction_txid(transaction_data, currentvin))
-    hashed_serialized_transaction = hashlib.sha256(hashlib.sha256(serialized_transaction).digest()).digest()
-    return filename == hashlib.sha256(hashed_serialized_transaction[::-1]).digest().hex()
+# def verify_txid(transaction_data: Dict, currentvin: Dict, filename: str) -> bool:
+#     serialized_transaction = bytes.fromhex(serialize_transaction_txid(transaction_data, currentvin))
+#     hashed_serialized_transaction = hashlib.sha256(hashlib.sha256(serialized_transaction).digest()).digest()
+#     return filename == hashlib.sha256(hashed_serialized_transaction[::-1]).digest().hex()
 
 # def verify_signatures(pubkey_bytes: any, signature_bytes: any, transaction_data: Dict, currentvin: Dict, filename: str) -> bool:
 #     # Load the public key
@@ -244,7 +244,7 @@ def verify_unlocking_script(vin: List[Dict], vout: List[Dict], filename: str) ->
               hashed_public_key_sha256 = hashlib.sha256(bytes.fromhex(public_key)).digest()
               hashed_public_key_ripemd160 = ripemd160(hashed_public_key_sha256)
               hashed_public_key_ripemd160_hex = binascii.hexlify(hashed_public_key_ripemd160).decode()
-              if hashed_public_key_ripemd160_hex == pubkey_hash and verify_txid(json.loads(raw_transaction), data, filename):
+              if hashed_public_key_ripemd160_hex == pubkey_hash:
                 #   return verify_signature(raw_transaction)
                 return True
         # For P2WSH (Pay-to-Witness-Script-Hash)
@@ -261,10 +261,6 @@ def verify_unlocking_script(vin: List[Dict], vout: List[Dict], filename: str) ->
         if scriptsig:
             publickey = scriptsig_asm.split(" ")[-1]
             signature = scriptsig_asm.split(" ")[1]
-            if verify_txid(json.loads(raw_transaction), data, filename):
-                # if verify_signature(raw_transaction) == False:
-                #     return False
-                return True
             public_key_hash = scriptpubkey_asm.split(" ")[-3]
             hashed_public_key_sha256 = hashlib.sha256(bytes.fromhex(publickey)).digest()
             hashed_public_key_ripemd160 = ripemd160(hashed_public_key_sha256)
