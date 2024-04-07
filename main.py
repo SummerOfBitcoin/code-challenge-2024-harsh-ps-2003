@@ -7,7 +7,7 @@ import time
 
 DIFFICULTY_TARGET = 0x0000FFFF00000000000000000000000000000000000000000000000000000000
 MAX_BLOCK_SIZE = 1000000  # 1 MB
-WITNESS_RESERVED_VALUE = bytes.fromhex('0000000000000000000000000000000000000000000000000000000000000000')
+WITNESS_RESERVED_VALUE = ('0000000000000000000000000000000000000000000000000000000000000000')
 
 
 valid_transactions = []
@@ -45,9 +45,20 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
     for tx in transactions:
         for vin in tx['vin']:
             if vin.get('witness'):
-                txids_with_witness.append(vin['txid'])
-    merkle_root = createmerkleroot(txids_with_witness)
-    concatenated_data = merkle_root + WITNESS_RESERVED_VALUE
+                txids_with_witness.append(vin['txid'].encode())
+    while len(txids_with_witness) > 1:
+        next_level = []
+        for i in range(0, len(txids_with_witness), 2):
+            pair_hash = b''
+            if i + 1 == len(txids_with_witness):
+                # In case of an odd number of elements, duplicate the last one
+                pair_hash = hashlib.sha256(txids_with_witness[i] + txids_with_witness[i]).digest()
+            else:
+                pair_hash = hashlib.sha256(txids_with_witness[i] + txids_with_witness[i + 1]).digest()
+            next_level.append(pair_hash)
+        txids_with_witness = next_level
+    merkle_root = txids_with_witness[0]
+    concatenated_data = merkle_root + bytes.fromhex(WITNESS_RESERVED_VALUE)
     witness_commitment = hashlib.sha256(hashlib.sha256(concatenated_data).digest()).digest()
     """
     Create a coinbase transaction.
@@ -102,7 +113,6 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
 def construct_block(transactions: List[Dict], miner_address: str, block_height: int) -> Dict:
     # Create the coinbase transaction
     coinbase_tx = create_coinbase_transaction(miner_address, block_height, 50, transactions)  # Assuming a fixed block reward of 50 BTC
-
     # Add the coinbase transaction to the beginning of the transactions list
     transactions.insert(0, coinbase_tx)
 
@@ -197,7 +207,6 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
 def output_to_file(transactions: List[Dict]):
     with open('output.txt', 'w') as file:
         file.write(header_hex + "\n")
-
         # Write the coinbase transaction 
         file.write(json.dumps(transactions[0]) + "\n")
 
