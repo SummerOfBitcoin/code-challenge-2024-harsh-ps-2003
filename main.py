@@ -151,7 +151,7 @@ def createmerkleroot(transactions: List[Dict]) -> bytes:
         # Iterate over vin fields in the transaction
         for vin in tx['vin']:
             # Append the txid to the list
-            reversed_txid = bytes.fromhex(vin["txid"])[::-1]
+            reversed_txid = (bytes.fromhex(vin["txid"])[::-1]).hex()
             txid_list.append(reversed_txid)  # Encode the strings to bytes
             
     while len(txid_list) > 1:
@@ -160,13 +160,13 @@ def createmerkleroot(transactions: List[Dict]) -> bytes:
             pair_hash = b''
             if i + 1 == len(txid_list):
                 # In case of an odd number of elements, duplicate the last one
-                pair_hash = hashlib.sha256(txid_list[i] + txid_list[i]).digest()
+                pair_hash = hashlib.sha256(bytes.fromhex(txid_list[i] + txid_list[i])).hexdigest()
             else:
-                pair_hash = hashlib.sha256(txid_list[i] + txid_list[i + 1]).digest()
+                pair_hash = hashlib.sha256(bytes.fromhex(txid_list[i] + txid_list[i + 1])).hexdigest()
             next_level.append(pair_hash)
         txid_list = next_level
         
-    return txid_list[0]
+    return bytes.fromhex(txid_list[0])
 
 def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) -> Dict:
     nonce = 0
