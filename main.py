@@ -188,7 +188,7 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
             bytes.fromhex(block_header['previous_block_hash']) +
             createmerkleroot(transactions) +
             block_header['time'].to_bytes(4, 'little') +
-            compact_target.to_bytes(4, 'little') +  # Use the compact representation
+            b'\xff\xff\x00\x1f' +  # Use the compact representation
             block_header['nonce'].to_bytes(4, 'little')
         )
         global header_hex
