@@ -161,9 +161,9 @@ def createmerkleroot(transactions: List[Dict]) -> bytes:
             pair_hash = b''
             if i + 1 == len(txid_list):
                 # In case of an odd number of elements, duplicate the last one
-                pair_hash = hashlib.sha256(bytes.fromhex(txid_list[i] + txid_list[i])).digest()
+                pair_hash = hashlib.sha256(hashlib.sha256(bytes.fromhex(txid_list[i] + txid_list[i])).digest()).digest()
             else:
-                pair_hash = hashlib.sha256(bytes.fromhex(txid_list[i] + txid_list[i + 1])).digest()
+                pair_hash = hashlib.sha256(hashlib.sha256(bytes.fromhex(txid_list[i] + txid_list[i + 1])).digest()).digest()
             next_level.append(pair_hash.hex())
         txid_list = next_level
         
