@@ -26,11 +26,17 @@ def calculate_transaction_size(transaction: Dict) -> int:
     return len(json.dumps(transaction))
 
 def read_txids(file_path):
+    txids = []
     with open(file_path, "r") as file:
-        with mmap.mmap(file.fileno(), length=0, access=mmap.ACCESS_READ) as mm:
-            txid_list = mm[:].decode("utf-8")
-            txids = json.loads(txid_list)
-            return txids
+        transaction_data = json.load(file)
+        for tx in transaction_data:
+            txids.append(tx)
+    return txids
+        # with mmap.mmap(file.fileno(), length=0, access=mmap.ACCESS_READ) as mm:
+        #     txid_list = mm[:].decode("utf-8")
+        #     txids = json.loads(txid_list)
+        #     return txids
+
 
 def select_transactions_based_on_fees(transactions, max_block_size):
     # Sort transactions by fee in descending order
