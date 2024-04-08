@@ -169,6 +169,37 @@ def createmerkleroot(transactions: List[Dict]) -> bytes:
         
     return bytes.fromhex(txid_list[0])
 
+def merkleroot(txid: List) -> bytes:
+
+    filepath = os.path.join(os.getcwd(), 'valid.json')
+    with open(filepath, 'r') as txids:
+                transaction_data = json.load(txids)
+                for tx in transaction_data:
+                    txid.append(tx)
+    # Initialize an empty list to store txids
+    txid_list = []
+
+        # Iterate over vin fields in the transaction
+    for tx in txid:
+            # Append the txid to the list
+            txid_bytes = bytes.fromhex(tx)
+            reversed_txid = (txid_bytes[::-1]).hex()
+            txid_list.append(reversed_txid)  # Encode the strings to bytes
+            
+    while len(txid_list) > 1:
+        next_level = []
+        for i in range(0, len(txid_list), 2):
+            pair_hash = b''
+            if i + 1 == len(txid_list):
+                # In case of an odd number of elements, duplicate the last one
+                pair_hash = hashlib.sha256(hashlib.sha256(bytes.fromhex(txid_list[i] + txid_list[i])).digest()).digest()
+            else:
+                pair_hash = hashlib.sha256(hashlib.sha256(bytes.fromhex(txid_list[i] + txid_list[i + 1])).digest()).digest()
+            next_level.append(pair_hash.hex())
+        txid_list = next_level
+        
+    return bytes.fromhex(txid_list[0])
+
 def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) -> Dict:
     nonce = 0
     max_nonce = 2**32  # Maximum value for a 32-bit number
@@ -182,11 +213,14 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
         block_header = block['header']
         block_header['nonce'] = nonce
 
+        txid = []
+
         # Serialize the block header
         header_bytes = (
             block_header['version'].to_bytes(4, 'little') +
             bytes.fromhex(block_header['previous_block_hash']) +
-            createmerkleroot(transactions) +
+            # createmerkleroot(transactions) +
+            merkleroot(txid) +
             block_header['time'].to_bytes(4, 'little') +
             b'\xff\xff\x00\x1f' +  # Use the compact representation
             block_header['nonce'].to_bytes(4, 'little')
