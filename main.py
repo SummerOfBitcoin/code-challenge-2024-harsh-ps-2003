@@ -210,7 +210,7 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
     exponent = len(bits)
     significand = bits[:3]  # Get the first three bytes as the significand
     compact_target = (exponent << 24) | int.from_bytes(significand, 'big')
-
+    mr = merkleroot()
     while nonce < max_nonce:
         block_header = block['header']
         block_header['nonce'] = nonce
@@ -220,7 +220,7 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
             block_header['version'].to_bytes(4, 'little') +
             bytes.fromhex(block_header['previous_block_hash']) +
             # createmerkleroot(transactions) +
-            merkleroot() +
+            mr +
             block_header['time'].to_bytes(4, 'little') +
             b'\xff\xff\x00\x1f' +  # Use the compact representation
             block_header['nonce'].to_bytes(4, 'little')
