@@ -213,9 +213,15 @@ def output_to_file(transactions: List[Dict]):
         file.write(json.dumps(transactions[0]) + "\n")
 
         # Write the txids of all transactions (excluding the coinbase transaction)
-        for tx in transactions[1:]:
-            for vin in tx['vin']:
-                file.write(vin["txid"] + "\n")
+        # for tx in transactions[1:]:
+        #     for vin in tx['vin']:
+        #         file.write(vin["txid"] + "\n")
+
+        filepath = os.path.join(os.getcwd(), 'valid.json')
+        with open(filepath, 'r') as txids:
+                transaction_data = json.load(txids)
+                for tx in transaction_data:
+                    file.write(tx + '\n')
 
 def main():
     transactions = read_transactions("mempool")
