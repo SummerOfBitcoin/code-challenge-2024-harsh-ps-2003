@@ -151,7 +151,8 @@ def createmerkleroot(transactions: List[Dict]) -> bytes:
         # Iterate over vin fields in the transaction
         for vin in tx['vin']:
             # Append the txid to the list
-            reversed_txid = (bytes.fromhex(vin["txid"])[::-1]).hex()
+            txid_bytes = bytes.fromhex(vin["txid"])
+            reversed_txid = (txid_bytes[::-1]).hex()
             txid_list.append(reversed_txid)  # Encode the strings to bytes
             
     while len(txid_list) > 1:
