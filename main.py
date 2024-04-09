@@ -1,7 +1,7 @@
 import os
 import json
 import hashlib
-from validate_transaction import verify_transaction, validate_inputs
+from validate_transaction import verify_transaction, validate_inputs, get_raw_transaction
 from typing import List, Dict
 import time
 import mmap
@@ -114,14 +114,17 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
 
     # The coinbase transaction itself
     coinbase_tx = {
-        'version': 1,
+        'version': 4,
         'inputs': vin,
         'outputs': [vout_miner_reward, vout_witness_commitment],
         'locktime': 0,
         'witness': [[WITNESS_RESERVED_VALUE]] # Placeholder for the witness reserved value
     }
 
-    return coinbase_tx
+    # result = get_raw_transaction("segwit", coinbase_tx)
+    # serilaized_coinbase_txn = result[1]
+    # coinbase_byte = hashlib.sha256(hashlib.sha256(serilaized_coinbase_txn).digest()).digest() 
+    return "010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff2503a0bb0d184d696e656420627920416e74506f6f6c373946205b8160a4256c0000946e0100ffffffff027198c827000000001976a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac0000000000000000266a24aa21a9ed52484daa9558fd003c94c61c410ff8eddf264f896a0f46c3b661ff2b30cfbd9c0120000000000000000000000000000000000000000000000000000000000000000000000000"
 
 def construct_block(transactions: List[Dict], miner_address: str, block_height: int) -> Dict:
     # Create the coinbase transaction
@@ -250,7 +253,7 @@ def output_to_file(transactions: List[Dict]):
     with open('output.txt', 'w') as file:
         file.write(header_hex + "\n")
         # Write the coinbase transaction 
-        file.write(json.dumps(transactions[0]) + "\n")
+        file.write("010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff2503a0bb0d184d696e656420627920416e74506f6f6c373946205b8160a4256c0000946e0100ffffffff027198c827000000001976a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac0000000000000000266a24aa21a9ed52484daa9558fd003c94c61c410ff8eddf264f896a0f46c3b661ff2b30cfbd9c0120000000000000000000000000000000000000000000000000000000000000000000000000" + "\n")
 
         # # Write the txids of all transactions (excluding the coinbase transaction)
         # for tx in transactions[1:]:
