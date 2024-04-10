@@ -4,8 +4,8 @@ from typing import List, Dict
 import hashlib
 # import ecdsa
 from ripemd.ripemd160 import ripemd160
-import bech32
-import base58
+# import bech32
+# import base58
 
 SIGHASH_ALL = b'\x01'
 SIGHASH_ANYONECANPAY = b'\x80'
@@ -270,171 +270,75 @@ def verify_unlocking_script(vin: List[Dict], vout: List[Dict], filename: str) ->
 
     return True  # All inputs have valid unlocking scripts
 
-def get_raw_transaction(tx_type, tx):
-    raw_tx = bytearray()
-    raw_wtx = bytearray()
-    non_witness_bytes = 0
-    witness_bytes = 0
-    fees = 0
+def get_raw_transaction(tx):
+    is_legacy = all("witness" not in input for input in tx["vin"])
 
-    if tx_type == "LEGACY":
-        # VERSION
-        raw_tx.extend(tx.get.to_bytes(4, 'little'))
-        non_witness_bytes += 4
-
-        raw_tx.append(len(tx.vin))
-        non_witness_bytes += 1
-
-        # INPUTS
-        for input in tx.vin:
-            # TXID REVERSED
-            txid = bytes.fromhex(input.txid)
-
-            # SCRIPT SIG
-            script_sig = bytes.fromhex(input.scriptsig)
+    if is_legacy:
+        raw_tx = bytearray()
+        version = tx["version"]
+        raw_tx.extend(version.to_bytes(4, 'little'))
+        raw_tx.append(len(tx["vin"]))
+        for input in tx["vin"]:
+            txid = bytes.fromhex(input["txid"])
+            script_sig = bytes.fromhex(input["scriptsig"])
             script_sig_len = len(script_sig)
 
             raw_tx.extend(txid)
-            raw_tx.extend(input.vout.to_bytes(4, 'little'))
+            raw_tx.extend(input["vout"].to_bytes(4, 'little'))
             raw_tx.append(script_sig_len)
             raw_tx.extend(script_sig)
-            raw_tx.extend(input.sequence.to_bytes(4, 'little'))
+            raw_tx.extend(input["sequence"].to_bytes(4, 'little'))
 
-            non_witness_bytes += 32 + 4 + 1 + script_sig_len + 4
-
-        raw_tx.append(len(tx.vout))
-
-        non_witness_bytes += 1
-
-        # OUTPUTS
-        for output in tx.vout:
-            # SCRIPT PUB KEY
-            scriptpubkey = bytes.fromhex(output.scriptpubkey)
+        raw_tx.append(len(tx["vout"]))
+        for output in tx["vout"]:
+            scriptpubkey = bytes.fromhex(output["scriptpubkey"])
             scriptpubkey_len = len(scriptpubkey)
 
-            raw_tx.extend(output.value.to_bytes(8, 'little'))
+            raw_tx.extend(output["value"].to_bytes(8, 'little'))
             raw_tx.append(scriptpubkey_len)
             raw_tx.extend(scriptpubkey)
 
-            non_witness_bytes += 8 + 1 + scriptpubkey_len
-
-        # LOCKTIME
-        raw_tx.extend(tx.locktime.to_bytes(4, 'little'))
-        non_witness_bytes += 4
-
-        raw_wtx = raw_tx.copy()
+        raw_tx.extend(tx["locktime"].to_bytes(4, 'little'))
+        return raw_tx
     else:
-        # VERSION
-        raw_tx.extend(tx.version.to_bytes(4, 'little'))
-        raw_wtx.extend(tx.version.to_bytes(4, 'little'))
+        raw_wtx = bytearray()
+        raw_wtx.extend(tx["version"].to_bytes(4, 'little'))
+        raw_wtx.append(0)  # Marker
+        raw_wtx.append(1)  # Flag
 
-        non_witness_bytes += 4
-
-        # MARKER FLAG IN WTX ONLY
-        marker = 0
-        flag = 1
-        raw_wtx.append(marker)
-        raw_wtx.append(flag)
-
-        witness_bytes += 1 + 1
-
-        # INPUT COUNT
-        if len(tx.vin) >= 50:
-            return False, [], [], 0, 0
-        raw_tx.append(len(tx.vin))
-        raw_wtx.append(len(tx.vin))
-
-        non_witness_bytes += 1
-
-        # INPUTS
-        for input in tx.vin:
-            # TXID REVERSED
-            txid = bytes.fromhex(input.txid)
-
-            # SCRIPT SIG
-            script_sig = bytes.fromhex(input.scriptsig)
+        raw_wtx.append(len(tx["vin"]))
+        for input in tx["vin"]:
+            txid = bytes.fromhex(input["txid"])
+            script_sig = bytes.fromhex(input.get("scriptsig", ""))
             script_sig_len = len(script_sig)
 
-            raw_tx.extend(txid)
-            raw_tx.extend(input.vout.to_bytes(4, 'little'))
-
             raw_wtx.extend(txid)
-            raw_wtx.extend(input.vout.to_bytes(4, 'little'))
-
-            non_witness_bytes += 32 + 4
-
-            if len(script_sig) >= 255:
-                return False, [], [], 0, 0
-
-            raw_tx.append(script_sig_len)
+            raw_wtx.extend(input["vout"].to_bytes(4, 'little'))
             raw_wtx.append(script_sig_len)
-
-            non_witness_bytes += 1
-
             if script_sig_len != 0:
-                raw_tx.extend(script_sig)
                 raw_wtx.extend(script_sig)
+            raw_wtx.extend(input["sequence"].to_bytes(4, 'little'))
 
-                non_witness_bytes += script_sig_len
-
-            raw_tx.extend(input.sequence.to_bytes(4, 'little'))
-            raw_wtx.extend(input.sequence.to_bytes(4, 'little'))
-
-            non_witness_bytes += 4
-
-        # OUTPUT COUNT
-        if len(tx.vout) >= 255:
-            return False, [], [], 0, 0
-        raw_tx.append(len(tx.vout))
-        raw_wtx.append(len(tx.vout))
-
-        non_witness_bytes += 1
-
-        # OUTPUTS
-        for output in tx.vout:
-            # SCRIPT PUB KEY
-            scriptpubkey = bytes.fromhex(output.scriptpubkey)
+        raw_wtx.append(len(tx["vout"]))
+        for output in tx["vout"]:
+            scriptpubkey = bytes.fromhex(output["scriptpubkey"])
             scriptpubkey_len = len(scriptpubkey)
 
-            raw_tx.extend(output.value.to_bytes(8, 'little'))
-            raw_wtx.extend(output.value.to_bytes(8, 'little'))
-
-            non_witness_bytes += 8
-
-            if scriptpubkey_len >= 50:
-                return False, [], [], 0, 0
-            raw_tx.append(scriptpubkey_len)
+            raw_wtx.extend(output["value"].to_bytes(8, 'little'))
             raw_wtx.append(scriptpubkey_len)
-            raw_tx.extend(scriptpubkey)
             raw_wtx.extend(scriptpubkey)
 
-            non_witness_bytes += 1 + scriptpubkey_len
-
-        # WITNESS ONLY IN WTX
-        for input in tx.vin:
-            witness = input.witness
-            witness_len = len(witness)
-
-            raw_wtx.append(len(witness))
-
-            witness_bytes += 1
-
+        raw_wtx.append(len(tx.get("witness", [])))
+        for input in tx["vin"]:
+            witness = input.get("witness", [])
             for item in witness:
                 item_bytes = bytes.fromhex(item)
                 item_bytes_len = len(item_bytes)
                 raw_wtx.append(item_bytes_len)
                 raw_wtx.extend(item_bytes)
 
-                witness_bytes += 1 + item_bytes_len
+        raw_wtx.extend(tx["locktime"].to_bytes(4, 'little'))
+        return raw_wtx
 
-        # LOCKTIME
-        raw_tx.extend(tx.locktime.to_bytes(4, 'little'))
-        raw_wtx.extend(tx.locktime.to_bytes(4, 'little'))
-
-        non_witness_bytes += 4
-
-    tx_weight = (non_witness_bytes * 4) + witness_bytes
-
-    return raw_tx, raw_wtx, tx_weight, fees
-
-verify_transaction(json.loads(raw_transaction), 'fff4a0b689cc3f6d03be29f58c0f68fc136a5d71175351230fcfe6662bebfce4')
+# verify_transaction(json.loads(raw_transaction), 'fff4a0b689cc3f6d03be29f58c0f68fc136a5d71175351230fcfe6662bebfce4')
+get_raw_transaction(json.loads(raw_transaction))

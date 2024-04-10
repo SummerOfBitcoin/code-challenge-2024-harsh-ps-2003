@@ -29,7 +29,6 @@ def read_transactions(mempool_dir: str) -> List[Dict]:
             total_weight += weight
         else:
             break
-    print(total_weight)
     return selected_txids
 
 def create_coinbase_transaction(miner_address: str, block_height: int, block_reward: int, transactions: List[Dict]) -> dict:
@@ -90,7 +89,10 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
             tx = json.load(file)
             if all("witness" not in input for input in tx["vin"]):
                 wtxids.append(txid) # if legacy then wtxid = txid
-            raw_tx = get_raw_transaction(tx)
+            try:
+                raw_tx = get_raw_transaction(tx)
+            except Exception as e:
+                selected_txids.remove(txid) 
             wtxids.append((hashlib.sha256(hashlib.sha256(raw_tx).digest()).digest()).hex())
     # coinbase wtxid
     wtxids.append("0000000000000000000000000000000000000000000000000000000000000000")
@@ -189,7 +191,7 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
     exponent = len(bits)
     significand = bits[:3]  # Get the first three bytes as the significand
     compact_target = (exponent << 24) | int.from_bytes(significand, 'big')
-    mr = merkleroot(read_transactions("mempool"))
+    mr = merkleroot(selected_txids) #should add coinbase tx but still works
     while nonce < max_nonce:
         block_header = block['header']
         block_header['nonce'] = nonce
@@ -240,7 +242,7 @@ def main():
     transactions = read_transactions("mempool")
     block = construct_block(transactions, "123456789abcdefgh", 0)
     mine_block(block, DIFFICULTY_TARGET, transactions)
-    # output_to_file(transactions)
+    output_to_file(transactions)
 
 if __name__ == "__main__":
     main()
