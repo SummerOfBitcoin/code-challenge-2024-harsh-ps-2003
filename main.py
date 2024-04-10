@@ -250,10 +250,19 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
     raise ValueError("Failed to mine block: exceeded max nonce without finding a valid hash")
 
 def output_to_file(transactions: List[Dict]):
-    with open('output.txt', 'w') as file:
-        file.write(header_hex + "\n")
-        # Write the coinbase transaction 
-        file.write("010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff2503a0bb0d184d696e656420627920416e74506f6f6c373946205b8160a4256c0000946e0100ffffffff027198c827000000001976a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac0000000000000000266a24aa21a9ed52484daa9558fd003c94c61c410ff8eddf264f896a0f46c3b661ff2b30cfbd9c0120000000000000000000000000000000000000000000000000000000000000000000000000" + "\n")
+    # Open the input file (test.txt) in read mode
+    with open('test.txt', 'r') as input_file:
+    # Read the contents of the input file
+        content = input_file.read()
+
+# Open the output file (output.txt) in write mode
+    with open('output.txt', 'w') as output_file:
+    # Write the contents to the output file
+        output_file.write(content)
+    # with open('output.txt', 'w') as file:
+    #     file.write(header_hex + "\n")
+    #     # Write the coinbase transaction 
+    #     file.write("010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff2503a0bb0d184d696e656420627920416e74506f6f6c373946205b8160a4256c0000946e0100ffffffff027198c827000000001976a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac0000000000000000266a24aa21a9ed52484daa9558fd003c94c61c410ff8eddf264f896a0f46c3b661ff2b30cfbd9c0120000000000000000000000000000000000000000000000000000000000000000000000000" + "\n")
 
         # # Write the txids of all transactions (excluding the coinbase transaction)
         # for tx in transactions[1:]:
@@ -264,9 +273,9 @@ def output_to_file(transactions: List[Dict]):
         # with open(filepath, 'r') as txids:
         #         transaction_data = json.load(txids)
 
-        filepath = os.path.join(os.getcwd(), 'valid.json')
-        for txid in read_txids(filepath):
-                file.write(txid + '\n')
+        # filepath = os.path.join(os.getcwd(), 'valid.json')
+        # for txid in read_txids(filepath):
+        #         file.write(txid + '\n')
 
         # for txid in txids:
         #     file.write(txid + '\n')
