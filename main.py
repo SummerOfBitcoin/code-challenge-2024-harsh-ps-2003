@@ -226,7 +226,6 @@ def output_to_file(transactions: List[Dict]):
         file.write(header_hex + "\n")
         # Write the coinbase transaction 
         file.write(coinbase_tx_hex + "\n")
-        print(selected_txids)
         # Write the txids of all transactions (excluding the coinbase transaction)
         for tx in selected_txids:
                 file.write(tx + "\n")
