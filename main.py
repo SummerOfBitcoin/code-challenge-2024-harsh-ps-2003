@@ -82,6 +82,8 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
     # coinbase_byte = hashlib.sha256(hashlib.sha256(serilaized_coinbase_txn).digest()).digest() 
     # return coinbase_tx, coinbase_byte.hex()
     wtxids = []
+    # coinbase wtxid
+    wtxids.append("0000000000000000000000000000000000000000000000000000000000000000")
     # other txids
     for txid in selected_txids:
         tx_file = os.path.join("mempool", f"{txid}.json")
@@ -94,8 +96,6 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
             except Exception as e:
                 selected_txids.remove(txid) 
             wtxids.append((hashlib.sha256(hashlib.sha256(raw_tx).digest()).digest()).hex())
-    # coinbase wtxid
-    wtxids.append("0000000000000000000000000000000000000000000000000000000000000000")
     witnessroot = merkleroot(wtxids)
     witnessComm = (hashlib.sha256(hashlib.sha256(witnessroot + WITNESS_RESERVED_VALUE).digest()).digest()).hex()
     coinbase_tx_hex = "010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff2503233708184d696e656420627920416e74506f6f6c373946205b8160a4256c0000946e0100ffffffff02f595814a000000001976a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac0000000000000000266a24aa21a9ed63ee4a27911ebd2f2288d993013260c3a2d7c36d2b82b5f85184eba2d8abdfb70120000000000000000000000000000000000000000000000000000000000000000000000000"
