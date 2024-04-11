@@ -95,7 +95,7 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
                 raw_wtx = get_raw_transaction(tx)
             except Exception as e:
                 selected_txids.remove(txid)
-            wtxids.append(((hashlib.sha256(hashlib.sha256(raw_wtx).digest()).digest()).hex())[::-1])
+            wtxids.append(((hashlib.sha256(hashlib.sha256(raw_wtx).digest()).digest())[::-1]).hex())
     witnessroot = merkleroot(wtxids)
     concatenated_data = witnessroot.hex() + WITNESS_RESERVED_VALUE.hex()
     witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
