@@ -11,9 +11,6 @@ WITNESS_RESERVED_VALUE = b"00000000000000000000000000000000000000000000000000000
 
 def read_transactions(mempool_dir: str) -> List[Dict]:
     data = {}
-    with open("valid.txt", 'r') as valid:
-        valid_filenames = list(set(valid.read().splitlines()))
-        valid_filenames = [filename + '.json' for filename in valid_filenames]
     for filename in os.listdir(mempool_dir):
             filepath = os.path.join(mempool_dir, filename)
             with open(filepath, 'r') as file:
