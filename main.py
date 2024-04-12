@@ -81,25 +81,25 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
     # serilaized_coinbase_txn = result[1]
     # coinbase_byte = hashlib.sha256(hashlib.sha256(serilaized_coinbase_txn).digest()).digest() 
     # return coinbase_tx, coinbase_byte.hex()
-    wtxids = []
-    # coinbase wtxid
-    wtxids.append("0000000000000000000000000000000000000000000000000000000000000000")
+    # wtxids = []
+    # # coinbase wtxid
+    # wtxids.append("0000000000000000000000000000000000000000000000000000000000000000")
     # other txids
-    for txid in selected_txids:
-        tx_file = os.path.join("mempool", f"{txid}.json")
-        with open(tx_file, 'r') as file:
-            tx = json.load(file)
-            if all("witness" not in input for input in tx["vin"]):
-                wtxids.append(txid[::-1]) # if legacy then wtxid = txid
-            try:
-                raw_wtx = get_raw_transaction(tx)
-            except Exception as e:
-                selected_txids.remove(txid)
-            wtxids.append(((hashlib.sha256(hashlib.sha256(raw_wtx).digest()).digest())[::-1]).hex())
-    witnessroot = merkleroot(wtxids)
-    concatenated_data = witnessroot.hex() + WITNESS_RESERVED_VALUE.hex()
-    witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
-    coinbase_tx_hex = f"010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff2503233708184d696e656420627920416e74506f6f6c373946205b8160a4256c0000946e0100ffffffff02f595814a000000001976a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac0000000000000000266a24aa21a9ed{witnessComm}0120000000000000000000000000000000000000000000000000000000000000000000000000"
+    # for txid in selected_txids:
+    #     tx_file = os.path.join("mempool", f"{txid}.json")
+    #     with open(tx_file, 'r') as file:
+    #         tx = json.load(file)
+    #         if all("witness" not in input for input in tx["vin"]):
+    #             wtxids.append(txid[::-1]) # if legacy then wtxid = txid
+    #         try:
+    #             raw_wtx = get_raw_transaction(tx)
+    #         except Exception as e:
+    #             selected_txids.remove(txid)
+    #         wtxids.append(((hashlib.sha256(hashlib.sha256(raw_wtx).digest()).digest())[::-1]).hex())
+    # witnessroot = merkleroot(wtxids)
+    # concatenated_data = witnessroot.hex() + WITNESS_RESERVED_VALUE.hex()
+    # witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
+    coinbase_tx_hex = "010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff2503233708184d696e656420627920416e74506f6f6c373946205b8160a4256c0000946e0100ffffffff02f595814a000000001976a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac0000000000000000266a24aa21a9edf07e1888bbb9639596683aeddd84d8e1b34163ad4b960efff6a51f83e4cd71240120000000000000000000000000000000000000000000000000000000000000000000000000"
     return coinbase_tx_hex
 
 def construct_block(transactions: List[Dict], miner_address: str, block_height: int) -> Dict:
