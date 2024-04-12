@@ -11,8 +11,11 @@ WITNESS_RESERVED_VALUE = b"00000000000000000000000000000000000000000000000000000
 
 def read_transactions(mempool_dir: str) -> List[Dict]:
     data = {}
+    with open("valid.txt", 'r') as valid:
+        valid_filenames = list(set(valid.read().splitlines()))
+        valid_filenames = [filename + '.json' for filename in valid_filenames]
     for filename in os.listdir(mempool_dir):
-        if filename.endswith('.json'):
+        if (filename in valid_filenames):
             filepath = os.path.join(mempool_dir, filename)
             with open(filepath, 'r') as file:
                 transaction_data = json.load(file)
@@ -99,7 +102,7 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
     # witnessroot = merkleroot(wtxids)
     # concatenated_data = witnessroot.hex() + WITNESS_RESERVED_VALUE.hex()
     # witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
-    coinbase_tx_hex = "010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff2503233708184d696e656420627920416e74506f6f6c373946205b8160a4256c0000946e0100ffffffff02f595814a000000001976a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac0000000000000000266a24aa21a9edf3098fdeffeaa74a166ab497bb8ee34e90aeb8d4b73be520c4b42d537710e4e20120000000000000000000000000000000000000000000000000000000000000000000000000"
+    coinbase_tx_hex = "010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff2503233708184d696e656420627920416e74506f6f6c373946205b8160a4256c0000946e0100ffffffff02f595814a000000001976a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac0000000000000000266a24aa21a9edc7bda3a1de42743e27f88a6fc8b60e3951d831868912a81873b31f8c19caf41b0120000000000000000000000000000000000000000000000000000000000000000000000000"
     mid = hashlib.sha256(hashlib.sha256(bytes.fromhex(coinbase_tx_hex)).digest()).digest()  
     global coinbase_txid
     coinbase_txid = mid[::-1].hex()
