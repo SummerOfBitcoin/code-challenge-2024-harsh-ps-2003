@@ -99,9 +99,9 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
     concatenated_data = witnessroot.hex() + WITNESS_RESERVED_VALUE.hex()
     witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
     coinbase_tx_hex = f"010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff2503233708184d696e656420627920416e74506f6f6c373946205b8160a4256c0000946e0100ffffffff02f595814a000000001976a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac0000000000000000266a24aa21a9ed{witnessComm}0120000000000000000000000000000000000000000000000000000000000000000000000000"
-    mid = hashlib.sha256(hashlib.sha256(bytes.fromhex(coinbase_tx_hex)).digest()).digest()  
-    global coinbase_txid
-    coinbase_txid = mid[::-1].hex()
+    # mid = hashlib.sha256(hashlib.sha256(bytes.fromhex(coinbase_tx_hex)).digest()).digest()  
+    # global coinbase_txid
+    # coinbase_txid = mid[::-1].hex()
     return coinbase_tx_hex
 
 def construct_block(transactions: List[Dict], miner_address: str, block_height: int) -> Dict:
@@ -230,7 +230,7 @@ def output_to_file(transactions: List[Dict]):
         file.write(header_hex + "\n")
         # Write the coinbase transaction 
         file.write(coinbase_tx_hex + "\n")
-        file.write(coinbase_txid + "\n")
+        # file.write(coinbase_txid + "\n")
         # Write the txids of all transactions (excluding the coinbase transaction)
         for tx in selected_txids:
                 file.write(tx + "\n")
