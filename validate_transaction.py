@@ -15,46 +15,53 @@ OP_PUSHNUM_1 = b'\x01'
 # Define the raw transaction data
 raw_transaction = """
 {
-        "version": 2,
-        "locktime": 834637,
-        "vin": [
-            {
-                "txid": "d0fa3356fb263009d4fc8d7d6ba59963a560baba8da03501fdc411ff26b76ad6",
-                "vout": 4,
-                "prevout": {
-                    "scriptpubkey": "0014371c620e2a5f79132ddea30020e251ddab5e315f",
-                    "scriptpubkey_asm": "OP_0 OP_PUSHBYTES_20 371c620e2a5f79132ddea30020e251ddab5e315f",
-                    "scriptpubkey_type": "v0_p2wpkh",
-                    "scriptpubkey_address": "bc1qxuwxyr32tau3xtw75vqzpcj3mk44uv2lwv5gtu",
-                    "value": 68200
-                },
-                "scriptsig": "",
-                "scriptsig_asm": "",
-                "witness": [
-                    "30440220323ad83e9b1c3d3d1f8704f507a044e2a174fc04fa3936f8a0e9f238c0ea7b9102203852a5543a0907d41c79ee6b6750b2a31d43c5632ceaa31aa379defc2edf845b01",
-                    "035ef2f94376edda64a2edb2acb257b44ab055b336f7e92c5a269144867d39a854"
-                ],
-                "is_coinbase": false,
-                "sequence": 4294967293
-            }
-        ],
-        "vout": [
-            {
-                "scriptpubkey": "0014c3f0446c20163f8bf338aea7db72b637ce23ff0f",
-                "scriptpubkey_asm": "OP_0 OP_PUSHBYTES_20 c3f0446c20163f8bf338aea7db72b637ce23ff0f",
-                "scriptpubkey_type": "v0_p2wpkh",
-                "scriptpubkey_address": "bc1qc0cygmpqzclchuec46naku4kxl8z8lc0r3cn5e",
-                "value": 1500
-            },
-            {
-                "scriptpubkey": "a914a077ab3315cc4c61c780fbc1ebaf92adf9b0b9dc87",
-                "scriptpubkey_asm": "OP_HASH160 OP_PUSHBYTES_20 a077ab3315cc4c61c780fbc1ebaf92adf9b0b9dc OP_EQUAL",
-                "scriptpubkey_type": "p2sh",
-                "scriptpubkey_address": "3GKVPy3J86HQmNK6rwwaxZjzKvYiRBE4wE",
-                "value": 59600
-            }
-        ]
+  "txid": "5ae5be014ba43d0054e9e5a8028cef55ef765733fc42c58d91985c4a1a95c980",
+  "version": 1,
+  "locktime": 0,
+  "vin": [
+    {
+      "txid": "d0c0b3f4a4768e7103a1237393a2b0a6d09797c46692a804407e2790de67bd66",
+      "vout": 1,
+      "prevout": {
+        "scriptpubkey": "76a9149f21a07a0c7c3cf65a51f586051395762267cdaf88ac",
+        "scriptpubkey_asm": "OP_DUP OP_HASH160 OP_PUSHBYTES_20 9f21a07a0c7c3cf65a51f586051395762267cdaf OP_EQUALVERIFY OP_CHECKSIG",
+        "scriptpubkey_type": "p2pkh",
+        "scriptpubkey_address": "1FWQiwK27EnGXb6BiBMRLJvunJQZZPMcGd",
+        "value": 106383179
+      },
+      "scriptsig": "4730440220521c8b3f37a59b88fcca25910cdf97d57b1145916380b064ab11c39434560550022003aed791b6515868cb8ba797d329987e44b7e62e0b01731ef799516fb53697e001210369e03e2c91f0badec46c9c903d9e9edae67c167b9ef9b550356ee791c9a40896",
+      "scriptsig_asm": "OP_PUSHBYTES_71 30440220521c8b3f37a59b88fcca25910cdf97d57b1145916380b064ab11c39434560550022003aed791b6515868cb8ba797d329987e44b7e62e0b01731ef799516fb53697e001 OP_PUSHBYTES_33 0369e03e2c91f0badec46c9c903d9e9edae67c167b9ef9b550356ee791c9a40896",
+      "is_coinbase": false,
+      "sequence": 4294967295
     }
+  ],
+  "vout": [
+    {
+      "scriptpubkey": "76a9149f21a07a0c7c3cf65a51f586051395762267cdaf88ac",
+      "scriptpubkey_asm": "OP_DUP OP_HASH160 OP_PUSHBYTES_20 9f21a07a0c7c3cf65a51f586051395762267cdaf OP_EQUALVERIFY OP_CHECKSIG",
+      "scriptpubkey_type": "p2pkh",
+      "scriptpubkey_address": "1FWQiwK27EnGXb6BiBMRLJvunJQZZPMcGd",
+      "value": 6377179
+    },
+    {
+      "scriptpubkey": "76a9140869ef31e55ac93f6689c348d687a046616ec65788ac",
+      "scriptpubkey_asm": "OP_DUP OP_HASH160 OP_PUSHBYTES_20 0869ef31e55ac93f6689c348d687a046616ec657 OP_EQUALVERIFY OP_CHECKSIG",
+      "scriptpubkey_type": "p2pkh",
+      "scriptpubkey_address": "1mVJyziKNhgw9Q5W1YvjcHm6Z4bjX9Ckg",
+      "value": 100000000
+    }
+  ],
+  "size": 225,
+  "weight": 900,
+  "fee": 6000,
+  "status": {
+    "confirmed": true,
+    "block_height": 834638,
+    "block_hash": "000000000000000000025f742c626208ac87e0b7d15054abb4a19ca2d735a54e",
+    "block_time": 1710405325
+  },
+  "hex": "010000000166bd67de90277e4004a89266c49797d0a6b0a2937323a103718e76a4f4b3c0d0010000006a4730440220521c8b3f37a59b88fcca25910cdf97d57b1145916380b064ab11c39434560550022003aed791b6515868cb8ba797d329987e44b7e62e0b01731ef799516fb53697e001210369e03e2c91f0badec46c9c903d9e9edae67c167b9ef9b550356ee791c9a40896ffffffff02db4e6100000000001976a9149f21a07a0c7c3cf65a51f586051395762267cdaf88ac00e1f505000000001976a9140869ef31e55ac93f6689c348d687a046616ec65788ac00000000"
+}
 """
 
 def verify_transaction(transaction_data: Dict, filename:str) -> bool:
@@ -341,4 +348,4 @@ def get_raw_transaction(tx):
         return raw_wtx
 
 # verify_transaction(json.loads(raw_transaction), 'fff4a0b689cc3f6d03be29f58c0f68fc136a5d71175351230fcfe6662bebfce4')
-get_raw_transaction(json.loads(raw_transaction))
+print(get_raw_transaction(json.loads(raw_transaction)).hex())
