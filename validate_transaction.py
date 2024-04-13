@@ -277,36 +277,11 @@ def verify_unlocking_script(vin: List[Dict], vout: List[Dict], filename: str) ->
 
     return True  # All inputs have valid unlocking scripts
 
-def get_raw_transaction(tx):
+def get_raw_transaction(tx, txid):
     is_legacy = all("witness" not in input for input in tx["vin"])
 
     if is_legacy:
-        raw_tx = bytearray()
-        version = tx["version"]
-        raw_tx.extend(version.to_bytes(4, 'little'))
-        raw_tx.append(len(tx["vin"]))
-        for input in tx["vin"]:
-            txid = bytes.fromhex(input["txid"])
-            script_sig = bytes.fromhex(input["scriptsig"])
-            script_sig_len = len(script_sig)
-
-            raw_tx.extend(txid)
-            raw_tx.extend(input["vout"].to_bytes(4, 'little'))
-            raw_tx.append(script_sig_len)
-            raw_tx.extend(script_sig)
-            raw_tx.extend(input["sequence"].to_bytes(4, 'little'))
-
-        raw_tx.append(len(tx["vout"]))
-        for output in tx["vout"]:
-            scriptpubkey = bytes.fromhex(output["scriptpubkey"])
-            scriptpubkey_len = len(scriptpubkey)
-
-            raw_tx.extend(output["value"].to_bytes(8, 'little'))
-            raw_tx.append(scriptpubkey_len)
-            raw_tx.extend(scriptpubkey)
-
-        raw_tx.extend(tx["locktime"].to_bytes(4, 'little'))
-        return raw_tx
+        return None
     else:
         raw_wtx = bytearray()
         raw_wtx.extend(tx["version"].to_bytes(4, 'little'))
@@ -348,4 +323,4 @@ def get_raw_transaction(tx):
         return raw_wtx
 
 # verify_transaction(json.loads(raw_transaction), 'fff4a0b689cc3f6d03be29f58c0f68fc136a5d71175351230fcfe6662bebfce4')
-print(get_raw_transaction(json.loads(raw_transaction)).hex())
+# print(get_raw_transaction(json.loads(raw_transaction)).hex())

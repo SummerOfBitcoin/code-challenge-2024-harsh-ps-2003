@@ -91,8 +91,11 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
                 with open(filepath, 'r') as file:
                     transaction_data = json.load(file)
                     try:
-                        raw = get_raw_transaction(transaction_data)
-                        wtxids.append(((hashlib.sha256(hashlib.sha256(raw).digest()).digest())[::-1]).hex())
+                        raw = get_raw_transaction(transaction_data, txid)
+                        if raw == None:
+                            wtxids.append(txid)
+                        else:
+                            wtxids.append(((hashlib.sha256(hashlib.sha256(raw).digest()).digest())[::-1]).hex())
                     except Exception as e:
                         selected_txids.remove(txid)
                     
