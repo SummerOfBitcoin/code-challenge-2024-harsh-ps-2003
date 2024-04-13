@@ -110,10 +110,19 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
     # with open('wtxids.txt', 'w') as file:
     #     for wtxid in wtxids:
     #         file.write(wtxid + '\n')
-    witnessroot = merkleroot(wtxids)
+    little_endian_wtxids = []
+    for txid in wtxids:
+        # Convert wtxid from hex to bytes
+        txid_bytes = bytes.fromhex(txid)
+        # Reverse the byte order to make it little-endian
+        little_endian_txid = txid_bytes[::-1].hex()
+        little_endian_wtxids.append(little_endian_txid)
+
+    # Calculate merkle root using little-endian wtxids
+    witnessroot = merkleroot(little_endian_wtxids)
     concatenated_data = witnessroot.hex() + WITNESS_RESERVED_VALUE
-    # witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
-    witnessComm = "3ce96611a2a642f2fa3f664a11736f98712419b7bb0338d59a123cea19887598"
+    witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
+    # witnessComm = "3ce96611a2a642f2fa3f664a11736f98712419b7bb0338d59a123cea19887598"
     coinbase_tx_hex = f"010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff2503233708184d696e656420627920416e74506f6f6c373946205b8160a4256c0000946e0100ffffffff02f595814a000000001976a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac0000000000000000266a24aa21a9ed{witnessComm}0120000000000000000000000000000000000000000000000000000000000000000000000000"
     mid = hashlib.sha256(hashlib.sha256(bytes.fromhex(coinbase_tx_hex)).digest()).digest()  
     global coinbase_txid
