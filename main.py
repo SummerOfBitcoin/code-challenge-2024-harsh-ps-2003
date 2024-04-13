@@ -210,7 +210,8 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
     exponent = len(bits)
     significand = bits[:3]  # Get the first three bytes as the significand
     compact_target = (exponent << 24) | int.from_bytes(significand, 'big')
-    mr = merkleroot(selected_txids) #should add coinbase tx but still works
+    selected_txids.insert(0, coinbase_txid)
+    mr = merkleroot(selected_txids) 
     while nonce < max_nonce:
         block_header = block['header']
         block_header['nonce'] = nonce
@@ -245,7 +246,7 @@ def output_to_file(transactions: List[Dict]):
         file.write(header_hex + "\n")
         # Write the coinbase transaction 
         file.write(coinbase_tx_hex + "\n")
-        file.write(coinbase_txid + "\n")
+        # file.write(coinbase_txid + "\n")
         # Write the txids of all transactions (excluding the coinbase transaction)
         for tx in selected_txids:
                 file.write(tx + "\n")
