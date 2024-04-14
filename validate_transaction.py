@@ -339,38 +339,38 @@ def get_raw_transaction(tx, txid):
         vin_count = len(tx['vin'])
         serialized += serialize_varint(vin_count)
         # Serialize vin
-    for vin in tx['vin']:
-        txid_bytes = binascii.unhexlify(vin['txid'])
-        serialized += txid_bytes[::-1]
+        for vin in tx['vin']:
+            txid_bytes = binascii.unhexlify(vin['txid'])
+            serialized += txid_bytes[::-1]
 
-        vout_bytes = struct.pack('<I', vin['vout'])
-        serialized += vout_bytes
+            vout_bytes = struct.pack('<I', vin['vout'])
+            serialized += vout_bytes
 
-        scriptsig_bytes = binascii.unhexlify(vin['scriptsig'])
-        serialized += serialize_varint(len(scriptsig_bytes))
-        serialized += scriptsig_bytes
+            scriptsig_bytes = binascii.unhexlify(vin['scriptsig'])
+            serialized += serialize_varint(len(scriptsig_bytes))
+            serialized += scriptsig_bytes
 
-        sequence_bytes = struct.pack('<I', vin['sequence'])
-        serialized += sequence_bytes
-        # Serialize vout count
-        vout_count = len(tx['vout'])
-        serialized += serialize_varint(vout_count)
+            sequence_bytes = struct.pack('<I', vin['sequence'])
+            serialized += sequence_bytes
+            # Serialize vout count
+            vout_count = len(tx['vout'])
+            serialized += serialize_varint(vout_count)
 
         # Serialize vout
         for vout in tx['vout']:
-            value_bytes = struct.pack('<Q', vout['value'])
-            serialized += value_bytes
+                value_bytes = struct.pack('<Q', vout['value'])
+                serialized += value_bytes
 
-            scriptpubkey_bytes = binascii.unhexlify(vout['scriptpubkey'])
-            serialized += serialize_varint(len(scriptpubkey_bytes))
-            serialized += scriptpubkey_bytes
+                scriptpubkey_bytes = binascii.unhexlify(vout['scriptpubkey'])
+                serialized += serialize_varint(len(scriptpubkey_bytes))
+                serialized += scriptpubkey_bytes
         for vin in tx['vin']:
-            witness_count = len(vin['witness'])
-            serialized += serialize_varint(witness_count)
-            for witness in vin['witness']:
-                witness_bytes = binascii.unhexlify(witness)
-                serialized += serialize_varint(len(witness_bytes))
-                serialized += witness_bytes
+                witness_count = len(vin['witness'])
+                serialized += serialize_varint(witness_count)
+                for witness in vin['witness']:
+                    witness_bytes = binascii.unhexlify(witness)
+                    serialized += serialize_varint(len(witness_bytes))
+                    serialized += witness_bytes
 
         locktime_bytes = struct.pack('<I', tx['locktime'])
         serialized += locktime_bytes
