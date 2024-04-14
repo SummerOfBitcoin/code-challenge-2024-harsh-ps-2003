@@ -1,4 +1,5 @@
 import binascii
+import struct
 import json
 from typing import List, Dict
 import hashlib
@@ -277,50 +278,103 @@ def verify_unlocking_script(vin: List[Dict], vout: List[Dict], filename: str) ->
 
     return True  # All inputs have valid unlocking scripts
 
+def serialize_varint(value):
+    if value < 0xfd:
+        return bytes([value])
+    elif value <= 0xffff:
+        return b'\xfd' + struct.pack('<H', value)
+    elif value <= 0xffffffff:
+        return b'\xfe' + struct.pack('<I', value)
+    else:
+        return b'\xff' + struct.pack('<Q', value)
+
 def get_raw_transaction(tx, txid):
     is_legacy = all("witness" not in input for input in tx["vin"])
 
     if is_legacy:
         return None
     else:
-        raw_wtx = bytearray()
-        raw_wtx.extend(tx["version"].to_bytes(4, 'little'))
-        raw_wtx.append(0)  # Marker
-        raw_wtx.append(1)  # Flag
+        # raw_wtx = bytearray()
+        # raw_wtx.extend(tx["version"].to_bytes(4, 'little'))
+        # raw_wtx.append(0)  # Marker
+        # raw_wtx.append(1)  # Flag
 
-        raw_wtx.append(len(tx["vin"]))
-        for input in tx["vin"]:
-            txid = bytes.fromhex(input["txid"])
-            script_sig = bytes.fromhex(input.get("scriptsig", ""))
-            script_sig_len = len(script_sig)
+        # raw_wtx.append(len(tx["vin"]))
+        # for input in tx["vin"]:
+        #     txid = bytes.fromhex(input["txid"])
+        #     script_sig = bytes.fromhex(input.get("scriptsig", ""))
+        #     script_sig_len = len(script_sig)
 
-            raw_wtx.extend(txid)
-            raw_wtx.extend(input["vout"].to_bytes(4, 'little'))
-            raw_wtx.append(script_sig_len)
-            if script_sig_len != 0:
-                raw_wtx.extend(script_sig)
-            raw_wtx.extend(input["sequence"].to_bytes(4, 'little'))
+        #     raw_wtx.extend(txid)
+        #     raw_wtx.extend(input["vout"].to_bytes(4, 'little'))
+        #     raw_wtx.append(script_sig_len)
+        #     if script_sig_len != 0:
+        #         raw_wtx.extend(script_sig)
+        #     raw_wtx.extend(input["sequence"].to_bytes(4, 'little'))
 
-        raw_wtx.append(len(tx["vout"]))
-        for output in tx["vout"]:
-            scriptpubkey = bytes.fromhex(output["scriptpubkey"])
-            scriptpubkey_len = len(scriptpubkey)
+        # raw_wtx.append(len(tx["vout"]))
+        # for output in tx["vout"]:
+        #     scriptpubkey = bytes.fromhex(output["scriptpubkey"])
+        #     scriptpubkey_len = len(scriptpubkey)
 
-            raw_wtx.extend(output["value"].to_bytes(8, 'little'))
-            raw_wtx.append(scriptpubkey_len)
-            raw_wtx.extend(scriptpubkey)
+        #     raw_wtx.extend(output["value"].to_bytes(8, 'little'))
+        #     raw_wtx.append(scriptpubkey_len)
+        #     raw_wtx.extend(scriptpubkey)
 
-        raw_wtx.append(len(tx.get("witness", [])))
-        for input in tx["vin"]:
-            witness = input.get("witness", [])
-            for item in witness:
-                item_bytes = bytes.fromhex(item)
-                item_bytes_len = len(item_bytes)
-                raw_wtx.append(item_bytes_len)
-                raw_wtx.extend(item_bytes)
+        # raw_wtx.append(len(tx.get("witness", [])))
+        # for input in tx["vin"]:
+        #     witness = input.get("witness", [])
+        #     for item in witness:
+        #         item_bytes = bytes.fromhex(item)
+        #         item_bytes_len = len(item_bytes)
+        #         raw_wtx.append(item_bytes_len)
+        #         raw_wtx.extend(item_bytes)
 
-        raw_wtx.extend(tx["locktime"].to_bytes(4, 'little'))
-        return raw_wtx
+        # raw_wtx.extend(tx["locktime"].to_bytes(4, 'little'))
+        # return raw_wtx
+        serialized = bytearray()
+        # Serialize version
+        serialized += struct.pack('<I', tx['version'])
+        serialized += bytes([0x00, 0x01])
+        vin_count = len(tx['vin'])
+        serialized += serialize_varint(vin_count)
+        # Serialize vin
+    for vin in tx['vin']:
+        txid_bytes = binascii.unhexlify(vin['txid'])
+        serialized += txid_bytes[::-1]
+
+        vout_bytes = struct.pack('<I', vin['vout'])
+        serialized += vout_bytes
+
+        scriptsig_bytes = binascii.unhexlify(vin['scriptsig'])
+        serialized += serialize_varint(len(scriptsig_bytes))
+        serialized += scriptsig_bytes
+
+        sequence_bytes = struct.pack('<I', vin['sequence'])
+        serialized += sequence_bytes
+        # Serialize vout count
+        vout_count = len(tx['vout'])
+        serialized += serialize_varint(vout_count)
+
+        # Serialize vout
+        for vout in tx['vout']:
+            value_bytes = struct.pack('<Q', vout['value'])
+            serialized += value_bytes
+
+            scriptpubkey_bytes = binascii.unhexlify(vout['scriptpubkey'])
+            serialized += serialize_varint(len(scriptpubkey_bytes))
+            serialized += scriptpubkey_bytes
+        for vin in tx['vin']:
+            witness_count = len(vin['witness'])
+            serialized += serialize_varint(witness_count)
+            for witness in vin['witness']:
+                witness_bytes = binascii.unhexlify(witness)
+                serialized += serialize_varint(len(witness_bytes))
+                serialized += witness_bytes
+
+        locktime_bytes = struct.pack('<I', tx['locktime'])
+        serialized += locktime_bytes
+        return bytes(serialized)
 
 # verify_transaction(json.loads(raw_transaction), 'fff4a0b689cc3f6d03be29f58c0f68fc136a5d71175351230fcfe6662bebfce4')
 # print(get_raw_transaction(json.loads(raw_transaction)).hex())
