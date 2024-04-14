@@ -121,8 +121,8 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
     # Calculate merkle root using little-endian wtxids
     witnessroot = merkleroot(little_endian_wtxids)
     concatenated_data = witnessroot.hex() + WITNESS_RESERVED_VALUE
-    # witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
-    witnessComm = "f3098fdeffeaa74a166ab497bb8ee34e90aeb8d4b73be520c4b42d537710e4e2"
+    witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
+    # witnessComm = "f3098fdeffeaa74a166ab497bb8ee34e90aeb8d4b73be520c4b42d537710e4e2"
     coinbase_tx_hex = f"010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff2503233708184d696e656420627920416e74506f6f6c373946205b8160a4256c0000946e0100ffffffff02f595814a000000001976a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac0000000000000000266a24aa21a9ed{witnessComm}0120000000000000000000000000000000000000000000000000000000000000000000000000"
     mid = hashlib.sha256(hashlib.sha256(bytes.fromhex(coinbase_tx_hex)).digest()).digest()  
     global coinbase_txid
@@ -139,7 +139,7 @@ def construct_block(transactions: List[Dict], miner_address: str, block_height: 
     block_header = {
         "version": 4,
         "previous_block_hash": "0"*64,  # Placeholder for the previous block hash
-        "merkle_root": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "merkle_root": (merkleroot(selected_txids)).hex(),
         "time": int(time.time()),  # Placeholder for the block's timestamp
         "bits": DIFFICULTY_TARGET,  # Placeholder for the difficulty target
         "nonce": 0  # Placeholder for the nonce
