@@ -195,7 +195,7 @@ def merkleroot(txids) -> bytes:
     for txid in txids:
             # Append the txid to the list
                 txid_bytes = bytes.fromhex(txid)
-                reversed_txid = (txid_bytes[::-1]).hex()
+                reversed_txid = (txid_bytes).hex()
                 txid_list.append(reversed_txid)  # Encode the strings to bytes
             
     while len(txid_list) > 1:
