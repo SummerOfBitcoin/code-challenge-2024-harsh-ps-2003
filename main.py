@@ -244,35 +244,35 @@ def merkleroot(txids) -> bytes:
     return bytes.fromhex(txid_list[0])
 
 def wtxid_merkleroot(wtxids) -> bytes:
-    little_endian_wtxids = []
-    for wtxid in wtxids:
-        # Convert wtxid from hex to bytes
-        wtxid_bytes = bytes.fromhex(wtxid)
-        # Reverse the byte order to make it little-endian
-        little_endian_wtxid = wtxid_bytes[::-1].hex()
-        little_endian_wtxids.append(little_endian_wtxid)
+    # little_endian_wtxids = []
+    # for wtxid in wtxids:
+    #     # Convert wtxid from hex to bytes
+    #     wtxid_bytes = bytes.fromhex(wtxid)
+    #     # Reverse the byte order to make it little-endian
+    #     little_endian_wtxid = wtxid_bytes[::-1].hex()
+    #     little_endian_wtxids.append(little_endian_wtxid)
     # Initialize an empty list to store txids
-    txid_list = []
-    # txids.insert(0, coinbase_txid)
-    for txid in little_endian_wtxids:
-            # Append the txid to the list
-                txid_bytes = bytes.fromhex(txid)
-                reversed_txid = (txid_bytes).hex()
-                txid_list.append(reversed_txid)  # Encode the strings to bytes
+    # txid_list = []
+    # # txids.insert(0, coinbase_txid)
+    # for txid in wtxids:
+    #         # Append the txid to the list
+    #             txid_bytes = bytes.fromhex(txid)
+    #             reversed_txid = (txid_bytes).hex()
+    #             txid_list.append(reversed_txid)  # Encode the strings to bytes
             
-    while len(txid_list) > 1:
+    while len(wtxids) > 1:
         next_level = []
-        for i in range(0, len(txid_list), 2):
+        for i in range(0, len(wtxids), 2):
             pair_hash = b''
-            if i + 1 == len(txid_list):
+            if i + 1 == len(wtxids):
                 # In case of an odd number of elements, duplicate the last one
-                pair_hash = hashlib.sha256(hashlib.sha256(bytes.fromhex(txid_list[i] + txid_list[i])).digest()).digest()
+                pair_hash = hashlib.sha256(hashlib.sha256(bytes.fromhex(wtxids[i] + wtxids[i])).digest()).digest()
             else:
-                pair_hash = hashlib.sha256(hashlib.sha256(bytes.fromhex(txid_list[i] + txid_list[i + 1])).digest()).digest()
+                pair_hash = hashlib.sha256(hashlib.sha256(bytes.fromhex(wtxids[i] + wtxids[i + 1])).digest()).digest()
             next_level.append(pair_hash.hex())
-        txid_list = next_level
+        wtxids = next_level
         
-    return bytes.fromhex(txid_list[0])
+    return bytes.fromhex(wtxids[0])
 
 def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) -> Dict:
     nonce = 0
