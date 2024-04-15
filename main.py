@@ -10,59 +10,25 @@ MAX_BLOCK_SIZE = 1000000  # 1 MB
 WITNESS_RESERVED_VALUE = '0000000000000000000000000000000000000000000000000000000000000000'
 
 def read_transactions(mempool_dir: str) -> List[Dict]:
-    # Get the current working directory
-    cwd = os.getcwd()
-
-    # Define the path to the mempool folder
-    mempool_path = os.path.join(cwd, "mempool")
-
-    # List all JSON files in the mempool folder
-    json_files = [f for f in os.listdir(mempool_path) if f.endswith('.json')]
-
-    # Create a dictionary to store weight and fee values for each file
-    file_data = {}
-
-    # Read each JSON file, extract weight and fee values, and store them
-    for file_name in json_files:
-        file_path = os.path.join(mempool_path, file_name)
-        with open(file_path, 'r') as f:
-            data = json.load(f)
-            weight = data.get('weight', 0)
-            fee = data.get('fee', 0)
-            
-            # Calculate a combined value to sort the files
-            combined_value = weight + fee
-            
-            # Store the combined value and file name
-            file_data[file_name] = {
-                'weight': weight,
-                'fee': fee,
-                'combined_value': combined_value
-            }
-
-    # Sort the files based on the combined value
-    sorted_files = sorted(file_data.items(), key=lambda x: x[1]['combined_value'])
-# Extract txid values from sorted files until sum of weights is less than 4 million
-    total_weight = 0
-    # Extract txid values from sorted files and store them
-    global txid_values
-    txid_values = []
-
-    for file_name, data in sorted_files:
-        with open(os.path.join(mempool_path, file_name), 'r') as f:
-            txid = json.load(f).get('txid', None)
-            if txid:
-                # Add the weight of the current transaction
-                total_weight += data['weight']
-                
-                # Check if the total weight exceeds 4 million
-                if total_weight > 4000000:
-                    break
-                
-                txid_values.append(txid)
-
-    # Now, txid_values contains the sorted txid values
-    return txid_values
+    data = {}
+    for filename in os.listdir(mempool_dir):
+            filepath = os.path.join(mempool_dir, filename)
+            with open(filepath, 'r') as file:
+                transaction_data = json.load(file)
+                txid = transaction_data["txid"]
+                weight = transaction_data["weight"]
+                data[txid] = weight
+    sorted_data = sorted(data.items(), key=lambda x: x[1])
+    global selected_txids
+    selected_txids = []
+    total_weight = 988 #coinbase
+    for txid, weight in sorted_data:
+        if total_weight + weight <= 4000000:
+            selected_txids.append(txid)
+            total_weight += weight
+        else:
+            break
+    return selected_txids
 
 def create_coinbase_transaction(miner_address: str, block_height: int, block_reward: int, transactions: List[Dict]) -> dict:
 
@@ -118,7 +84,7 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
     # coinbase wtxid
     wtxids.append("0000000000000000000000000000000000000000000000000000000000000000")
     # other txids
-    for txid in txid_values:
+    for txid in selected_txids:
         for filename in os.listdir("mempool"):
             if (txid + '.json') == filename:
                 filepath = os.path.join("mempool", filename)
@@ -132,7 +98,7 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
                             wtxid = ((hashlib.sha256(hashlib.sha256(raw).digest()).digest())[::-1]).hex()
                             wtxids.append(wtxid) #little eiden conversion 
                     except Exception as e:
-                        txid_values.remove(txid)
+                        selected_txids.remove(txid)
                     
     # for txid in selected_txids:
         # tx_file = os.path.join("mempool", f"{txid}.json")
@@ -204,7 +170,7 @@ def construct_block(transactions: List[Dict], miner_address: str, block_height: 
     block_header = {
         "version": 4,
         "previous_block_hash": "0"*64,  # Placeholder for the previous block hash
-        "merkle_root": (merkleroot(txid_values)).hex(),
+        "merkle_root": (merkleroot(selected_txids)).hex(),
         "time": int(time.time()),  # Placeholder for the block's timestamp
         "bits": DIFFICULTY_TARGET,  # Placeholder for the difficulty target
         "nonce": 0  # Placeholder for the nonce
@@ -316,8 +282,8 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
     # exponent = len(bits)
     # significand = bits[:3]  # Get the first three bytes as the significand
     # compact_target = (exponent << 24) | int.from_bytes(significand, 'big')
-    txid_values.insert(0, coinbase_txid)
-    mr = merkleroot(txid_values) 
+    selected_txids.insert(0, coinbase_txid)
+    mr = merkleroot(selected_txids) 
     while nonce < max_nonce:
         block_header = block['header']
         block_header['nonce'] = nonce
@@ -354,7 +320,7 @@ def output_to_file(transactions: List[Dict]):
         file.write(coinbase_tx_hex + "\n")
         # file.write(coinbase_txid + "\n")
         # Write the txids of all transactions (excluding the coinbase transaction)
-        for tx in txid_values:
+        for tx in selected_txids:
                 file.write(tx + "\n")
 
         # filepath = os.path.join(os.getcwd(), 'valid.json')
