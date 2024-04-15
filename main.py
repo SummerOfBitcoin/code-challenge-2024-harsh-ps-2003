@@ -91,7 +91,7 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
                 with open(filepath, 'r') as file:
                     transaction_data = json.load(file)
                     try:
-                        raw = get_raw_transaction(transaction_data, txid)
+                        raw = get_raw_transaction(transaction_data)
                         if raw == None:
                             wtxids.append(txid)
                         else:

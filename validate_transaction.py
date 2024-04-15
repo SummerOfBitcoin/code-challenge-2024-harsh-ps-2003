@@ -288,7 +288,7 @@ def serialize_varint(value):
     else:
         return b'\xff' + struct.pack('<Q', value)
 
-def get_raw_transaction(tx, txid):
+def get_raw_transaction(tx):
     is_legacy = all("witness" not in input for input in tx["vin"])
 
     if is_legacy:
