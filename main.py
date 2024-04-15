@@ -114,8 +114,8 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
     # Calculate merkle root using little-endian wtxids
     witnessroot = wtxid_merkleroot(wtxids)
     concatenated_data = witnessroot.hex() + WITNESS_RESERVED_VALUE
-    witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
-    # witnessComm = "f3098fdeffeaa74a166ab497bb8ee34e90aeb8d4b73be520c4b42d537710e4e2"
+    # witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
+    witnessComm = "5089072bb7c204e8363a17abfa88cc96ab06cb5a029774b39b4d08d0d76c6c3d"
     # {
 #   "version": "01000000",
 #   "marker": "00",
