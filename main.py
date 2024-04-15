@@ -216,10 +216,10 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
     nonce = 0
     max_nonce = 2**32  # Maximum value for a 32-bit number
 
-    bits = difficulty_target.to_bytes(32, 'big')
-    exponent = len(bits)
-    significand = bits[:3]  # Get the first three bytes as the significand
-    compact_target = (exponent << 24) | int.from_bytes(significand, 'big')
+    # bits = difficulty_target.to_bytes(32, 'big')
+    # exponent = len(bits)
+    # significand = bits[:3]  # Get the first three bytes as the significand
+    # compact_target = (exponent << 24) | int.from_bytes(significand, 'big')
     selected_txids.insert(0, coinbase_txid)
     mr = merkleroot(selected_txids) 
     while nonce < max_nonce:
