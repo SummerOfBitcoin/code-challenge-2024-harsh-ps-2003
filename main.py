@@ -93,9 +93,12 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
                     try:
                         raw = get_raw_transaction(transaction_data)
                         if raw == None:
-                            wtxids.append(txid)
+                            wtxids.append(txid[::-1])
                         else:
-                            wtxids.append(((hashlib.sha256(hashlib.sha256(raw).digest()).digest())[::-1]).hex()) #little eiden conversion 
+                            wtxid = ((hashlib.sha256(hashlib.sha256(raw).digest()).digest())[::-1]).hex()
+                            s = [raw.hex(), wtxid, txid]
+                            print(s)
+                            wtxids.append(wtxid) #little eiden conversion 
                     except Exception as e:
                         selected_txids.remove(txid)
                     
@@ -114,8 +117,8 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
     # Calculate merkle root using little-endian wtxids
     witnessroot = wtxid_merkleroot(wtxids)
     concatenated_data = witnessroot.hex() + WITNESS_RESERVED_VALUE
-    # witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
-    witnessComm = "5089072bb7c204e8363a17abfa88cc96ab06cb5a029774b39b4d08d0d76c6c3d"
+    witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
+    # witnessComm = "5089072bb7c204e8363a17abfa88cc96ab06cb5a029774b39b4d08d0d76c6c3d"
     # {
 #   "version": "01000000",
 #   "marker": "00",
@@ -252,27 +255,27 @@ def wtxid_merkleroot(wtxids) -> bytes:
     #     little_endian_wtxid = wtxid_bytes[::-1].hex()
     #     little_endian_wtxids.append(little_endian_wtxid)
     # Initialize an empty list to store txids
-    # txid_list = []
-    # # txids.insert(0, coinbase_txid)
-    # for txid in wtxids:
-    #         # Append the txid to the list
-    #             txid_bytes = bytes.fromhex(txid)
-    #             reversed_txid = (txid_bytes).hex()
-    #             txid_list.append(reversed_txid)  # Encode the strings to bytes
+    txid_list = []
+    # txids.insert(0, coinbase_txid)
+    for txid in wtxids:
+            # Append the txid to the list
+                txid_bytes = bytes.fromhex(txid)
+                reversed_txid = (txid_bytes[::-1]).hex()
+                txid_list.append(reversed_txid)  # Encode the strings to bytes
             
-    while len(wtxids) > 1:
+    while len(txid_list) > 1:
         next_level = []
-        for i in range(0, len(wtxids), 2):
+        for i in range(0, len(txid_list), 2):
             pair_hash = b''
-            if i + 1 == len(wtxids):
+            if i + 1 == len(txid_list):
                 # In case of an odd number of elements, duplicate the last one
-                pair_hash = hashlib.sha256(hashlib.sha256(bytes.fromhex(wtxids[i] + wtxids[i])).digest()).digest()
+                pair_hash = hashlib.sha256(hashlib.sha256(bytes.fromhex(txid_list[i] + txid_list[i])).digest()).digest()
             else:
-                pair_hash = hashlib.sha256(hashlib.sha256(bytes.fromhex(wtxids[i] + wtxids[i + 1])).digest()).digest()
+                pair_hash = hashlib.sha256(hashlib.sha256(bytes.fromhex(txid_list[i] + txid_list[i + 1])).digest()).digest()
             next_level.append(pair_hash.hex())
-        wtxids = next_level
+        txid_list = next_level
         
-    return bytes.fromhex(wtxids[0])
+    return bytes.fromhex(txid_list[0])
 
 def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) -> Dict:
     nonce = 0
