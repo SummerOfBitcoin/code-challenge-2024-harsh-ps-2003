@@ -95,7 +95,7 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
                         if raw == None:
                             wtxids.append(txid)
                         else:
-                            wtxids.append(((hashlib.sha256(hashlib.sha256(raw).digest()).digest())[::-1]).hex())
+                            wtxids.append(((hashlib.sha256(hashlib.sha256(raw).digest()).digest())[::-1]).hex()) #little eiden conversion 
                     except Exception as e:
                         selected_txids.remove(txid)
                     
