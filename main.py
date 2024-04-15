@@ -31,10 +31,6 @@ def read_transactions(mempool_dir: str) -> List[Dict]:
     return selected_txids
 
 def create_coinbase_transaction(miner_address: str, block_height: int, block_reward: int, transactions: List[Dict]) -> dict:
-    # result = get_raw_transaction("segwit", coinbase_tx)
-    # serilaized_coinbase_txn = result[1]
-    # coinbase_byte = hashlib.sha256(hashlib.sha256(serilaized_coinbase_txn).digest()).digest() 
-    # return coinbase_tx, coinbase_byte.hex()
     wtxids = []
     # coinbase wtxid
     wtxids.append("0000000000000000000000000000000000000000000000000000000000000000")
@@ -152,13 +148,6 @@ def merkleroot(txids) -> bytes:
     return bytes.fromhex(txid_list[0])
 
 def wtxid_merkleroot(wtxids) -> bytes:
-    # little_endian_wtxids = []
-    # for wtxid in wtxids:
-    #     # Convert wtxid from hex to bytes
-    #     wtxid_bytes = bytes.fromhex(wtxid)
-    #     # Reverse the byte order to make it little-endian
-    #     little_endian_wtxid = wtxid_bytes[::-1].hex()
-    #     little_endian_wtxids.append(little_endian_wtxid)
     # Initialize an empty list to store txids
     txid_list = []
     # txids.insert(0, coinbase_txid)
@@ -185,11 +174,6 @@ def wtxid_merkleroot(wtxids) -> bytes:
 def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) -> Dict:
     nonce = 0
     max_nonce = 2**32  # Maximum value for a 32-bit number
-
-    # bits = difficulty_target.to_bytes(32, 'big')
-    # exponent = len(bits)
-    # significand = bits[:3]  # Get the first three bytes as the significand
-    # compact_target = (exponent << 24) | int.from_bytes(significand, 'big')
     selected_txids.insert(0, coinbase_txid)
     mr = merkleroot(selected_txids) 
     while nonce < max_nonce:
@@ -226,17 +210,9 @@ def output_to_file(transactions: List[Dict]):
         file.write(header_hex + "\n")
         # Write the coinbase transaction 
         file.write(coinbase_tx_hex + "\n")
-        # file.write(coinbase_txid + "\n")
-        # Write the txids of all transactions (excluding the coinbase transaction)
+        # Write the txids of all transactions
         for tx in selected_txids:
                 file.write(tx + "\n")
-
-        # filepath = os.path.join(os.getcwd(), 'valid.json')
-        # with open(filepath, 'r') as txids:
-        #         transaction_data = json.load(txids)
-
-        # for txid in txids:
-        #     file.write(txid + '\n')
 
 def main():
     transactions = read_transactions("mempool")
