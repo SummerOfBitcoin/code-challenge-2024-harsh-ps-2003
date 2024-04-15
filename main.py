@@ -99,18 +99,6 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
                             wtxids.append(wtxid) #little eiden conversion 
                     except Exception as e:
                         selected_txids.remove(txid)
-                    
-    # for txid in selected_txids:
-        # tx_file = os.path.join("mempool", f"{txid}.json")
-    # with open("tx.txt", 'r') as file:
-    #         for tx in file:
-    #             wtxids.append(((hashlib.sha256(hashlib.sha256(bytes.fromhex(tx)).digest()).digest())[::-1]).hex())
-            # tx = json.load(file)
-            # if all("witness" not in input for input in tx["vin"]):
-                # wtxids.append(txid[::-1]) # if legacy then wtxid = txid
-    # with open('wtxids.txt', 'w') as file:
-    #     for wtxid in wtxids:
-    #         file.write(wtxid + '\n')
 
     # Calculate merkle root using little-endian wtxids
     witnessroot = wtxid_merkleroot(wtxids)
@@ -183,41 +171,6 @@ def construct_block(transactions: List[Dict], miner_address: str, block_height: 
     }
 
     return block
-
-# def createpreviousblockhash() -> bytes:
-#     difficulty_target = bytes.fromhex('0000ffff00000000000000000000000000000000000000000000000000000000')
-#     target_int = int.from_bytes(difficulty_target, 'big')
-#     greater_hash_int = target_int + 33
-#     greater_hash_bytes = greater_hash_int.to_bytes(32, 'big')
-#     reversed_hash_bytes = greater_hash_bytes[::-1]
-#     return reversed_hash_bytes
-
-# def createmerkleroot(transactions: List[Dict]) -> bytes:
-#     # Initialize an empty list to store txids
-#     txid_list = []
-
-#     # Iterate over transactions
-#     for tx in transactions[1:]:
-#         # Iterate over vin fields in the transaction
-#         for vin in tx['vin']:
-#             # Append the txid to the list
-#             txid_bytes = bytes.fromhex(vin["txid"])
-#             reversed_txid = (txid_bytes[::-1]).hex()
-#             txid_list.append(reversed_txid)  # Encode the strings to bytes
-            
-#     while len(txid_list) > 1:
-#         next_level = []
-#         for i in range(0, len(txid_list), 2):
-#             pair_hash = b''
-#             if i + 1 == len(txid_list):
-#                 # In case of an odd number of elements, duplicate the last one
-#                 pair_hash = hashlib.sha256(hashlib.sha256(bytes.fromhex(txid_list[i] + txid_list[i])).digest()).digest()
-#             else:
-#                 pair_hash = hashlib.sha256(hashlib.sha256(bytes.fromhex(txid_list[i] + txid_list[i + 1])).digest()).digest()
-#             next_level.append(pair_hash.hex())
-#         txid_list = next_level
-        
-#     return bytes.fromhex(txid_list[0])
 
 def merkleroot(txids) -> bytes:
     # Initialize an empty list to store txids
