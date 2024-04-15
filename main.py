@@ -31,51 +31,6 @@ def read_transactions(mempool_dir: str) -> List[Dict]:
     return selected_txids
 
 def create_coinbase_transaction(miner_address: str, block_height: int, block_reward: int, transactions: List[Dict]) -> dict:
-
-    """
-    Create a coinbase transaction.
-
-    :param miner_address: The address of the miner to receive the block reward.
-    :param block_height: The height of the block being mined.
-    :param block_reward: The total block reward (block subsidy + transaction fees).
-    :param witness_commitment: The witness commitment hash.
-    :return: A dictionary representing the coinbase transaction.
-    """
-    # Coinbase transaction's input
-    vin = [{
-        'txid': '0000000000000000000000000000000000000000000000000000000000000000',
-        'vout': 0xffffffff,
-        'scriptSig': {
-            'asm': f'{block_height}',
-            'hex': block_height.to_bytes(4, 'little').hex() + '...'  # Placeholder for additional data to ensure scriptSig length is valid
-        },
-        'sequence': 0xffffffff,
-        'coinbase': '...'  # Placeholder for coinbase data (e.g., extra nonce and miner-defined data)
-    }]
-
-    # Output for the miner's block reward
-    vout_miner_reward = {
-        'value': block_reward,
-        'scriptPubKey': {
-            'asm': f'OP_DUP OP_HASH160 {miner_address} OP_EQUALVERIFY OP_CHECKSIG',
-            'hex': '...'  # Placeholder for the actual hex representation
-        }
-    }
-
-    # Output for the witness commitment
-    vout_witness_commitment = {
-        'value': 0,
-    }
-
-    # The coinbase transaction itself
-    coinbase_tx = {
-        'version': 4,
-        'vin': vin,
-        'vout': [vout_miner_reward, vout_witness_commitment],
-        'locktime': 0,
-        'witness': []  # Empty witness data as it's a coinbase transaction
-    }
-
     # result = get_raw_transaction("segwit", coinbase_tx)
     # serilaized_coinbase_txn = result[1]
     # coinbase_byte = hashlib.sha256(hashlib.sha256(serilaized_coinbase_txn).digest()).digest() 
