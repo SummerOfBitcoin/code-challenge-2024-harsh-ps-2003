@@ -110,16 +110,9 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
     # with open('wtxids.txt', 'w') as file:
     #     for wtxid in wtxids:
     #         file.write(wtxid + '\n')
-    little_endian_wtxids = []
-    for txid in wtxids:
-        # Convert wtxid from hex to bytes
-        txid_bytes = bytes.fromhex(txid)
-        # Reverse the byte order to make it little-endian
-        little_endian_txid = txid_bytes[::-1].hex()
-        little_endian_wtxids.append(little_endian_txid)
 
     # Calculate merkle root using little-endian wtxids
-    witnessroot = merkleroot(little_endian_wtxids)
+    witnessroot = wtxid_merkleroot(wtxids)
     concatenated_data = witnessroot.hex() + WITNESS_RESERVED_VALUE
     witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
     # witnessComm = "f3098fdeffeaa74a166ab497bb8ee34e90aeb8d4b73be520c4b42d537710e4e2"
@@ -193,6 +186,37 @@ def merkleroot(txids) -> bytes:
     txid_list = []
     # txids.insert(0, coinbase_txid)
     for txid in txids:
+            # Append the txid to the list
+                txid_bytes = bytes.fromhex(txid)
+                reversed_txid = (txid_bytes[::-1]).hex()
+                txid_list.append(reversed_txid)  # Encode the strings to bytes
+            
+    while len(txid_list) > 1:
+        next_level = []
+        for i in range(0, len(txid_list), 2):
+            pair_hash = b''
+            if i + 1 == len(txid_list):
+                # In case of an odd number of elements, duplicate the last one
+                pair_hash = hashlib.sha256(hashlib.sha256(bytes.fromhex(txid_list[i] + txid_list[i])).digest()).digest()
+            else:
+                pair_hash = hashlib.sha256(hashlib.sha256(bytes.fromhex(txid_list[i] + txid_list[i + 1])).digest()).digest()
+            next_level.append(pair_hash.hex())
+        txid_list = next_level
+        
+    return bytes.fromhex(txid_list[0])
+
+def wtxid_merkleroot(wtxids) -> bytes:
+    little_endian_wtxids = []
+    for wtxid in wtxids:
+        # Convert wtxid from hex to bytes
+        wtxid_bytes = bytes.fromhex(wtxid)
+        # Reverse the byte order to make it little-endian
+        little_endian_wtxid = wtxid_bytes[::-1].hex()
+        little_endian_wtxids.append(little_endian_wtxid)
+    # Initialize an empty list to store txids
+    txid_list = []
+    # txids.insert(0, coinbase_txid)
+    for txid in little_endian_wtxids:
             # Append the txid to the list
                 txid_bytes = bytes.fromhex(txid)
                 reversed_txid = (txid_bytes).hex()
