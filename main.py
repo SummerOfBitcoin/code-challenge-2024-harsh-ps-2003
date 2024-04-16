@@ -44,14 +44,14 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
                     try:
                         raw = get_raw_transaction(transaction_data)
                         if raw == None:
-                            wtxids.append(txid[::-1])
+                            wtxids.append(txid)
                         else:
-                            wtxid = ((hashlib.sha256(hashlib.sha256(raw).digest()).digest())[::-1]).hex()
-                            wtxids.append(wtxid) #little eiden conversion 
+                            wtxid = ((hashlib.sha256(hashlib.sha256(raw).digest()).digest())).hex()
+                            wtxids.append(wtxid) 
                     except Exception as e:
                         selected_txids.remove(txid)
 
-    # Calculate merkle root using little-endian wtxids
+    # Calculate merkle root
     witnessroot = wtxid_merkleroot(wtxids)
     concatenated_data = witnessroot.hex() + WITNESS_RESERVED_VALUE
     witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
@@ -154,8 +154,8 @@ def wtxid_merkleroot(wtxids) -> bytes:
     for txid in wtxids:
             # Append the txid to the list
                 txid_bytes = bytes.fromhex(txid)
-                reversed_txid = (txid_bytes[::-1]).hex()
-                txid_list.append(reversed_txid)  # Encode the strings to bytes
+                reversed_txid = (txid_bytes[::-1]).hex() #little eiden
+                txid_list.append(reversed_txid)  
             
     while len(txid_list) > 1:
         next_level = []
@@ -184,7 +184,6 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
         header_bytes = (
             block_header['version'].to_bytes(4, 'little') +
             bytes.fromhex(block_header['previous_block_hash']) +
-            # createmerkleroot(transactions) +
             mr +
             block_header['time'].to_bytes(4, 'little') +
             b'\xff\xff\x00\x1f' +  # Use the compact representation
