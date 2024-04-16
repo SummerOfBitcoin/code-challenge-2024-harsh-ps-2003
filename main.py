@@ -44,15 +44,15 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
                     try:
                         raw = get_raw_transaction(transaction_data)
                         if raw == None:
-                            wtxids.append(txid)
+                            wtxids.append(txid[::-1])
                         else:
-                            wtxid = ((hashlib.sha256(hashlib.sha256(raw).digest()).digest())).hex()
+                            wtxid = ((hashlib.sha256(hashlib.sha256(raw).digest()).digest())[::-1]).hex()
                             wtxids.append(wtxid) 
                     except Exception as e:
                         selected_txids.remove(txid)
 
     # Calculate merkle root
-    witnessroot = wtxid_merkleroot(wtxids)
+    witnessroot = merkleroot(wtxids)
     concatenated_data = witnessroot.hex() + WITNESS_RESERVED_VALUE
     witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
     # {
@@ -131,30 +131,6 @@ def merkleroot(txids) -> bytes:
             # Append the txid to the list
                 txid_bytes = bytes.fromhex(txid)
                 reversed_txid = (txid_bytes[::-1]).hex()
-                txid_list.append(reversed_txid)  # Encode the strings to bytes
-            
-    while len(txid_list) > 1:
-        next_level = []
-        for i in range(0, len(txid_list), 2):
-            pair_hash = b''
-            if i + 1 == len(txid_list):
-                # In case of an odd number of elements, duplicate the last one
-                pair_hash = hashlib.sha256(hashlib.sha256(bytes.fromhex(txid_list[i] + txid_list[i])).digest()).digest()
-            else:
-                pair_hash = hashlib.sha256(hashlib.sha256(bytes.fromhex(txid_list[i] + txid_list[i + 1])).digest()).digest()
-            next_level.append(pair_hash.hex())
-        txid_list = next_level
-        
-    return bytes.fromhex(txid_list[0])
-
-def wtxid_merkleroot(wtxids) -> bytes:
-    # Initialize an empty list to store txids
-    txid_list = []
-    # txids.insert(0, coinbase_txid)
-    for txid in wtxids:
-            # Append the txid to the list
-                txid_bytes = bytes.fromhex(txid)
-                reversed_txid = (txid_bytes[::-1]).hex() #little eiden
                 txid_list.append(reversed_txid)  
             
     while len(txid_list) > 1:
