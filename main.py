@@ -159,21 +159,21 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
     nonce = 0
     max_nonce = 2**32  # Maximum value for a 32-bit number
     # selected_txids.insert(0, coinbase_txid)
-    mr = merkleroot(correcttxids) 
+    # mr = merkleroot(correcttxids) 
+    hhex = "0700000000000000000000000000000000000000000000000000000000000000000000008acb098b6fabb458fb5e9622c59b039f53be6b18ea74ba1ea979b9de7b867c1899ec1f66ffff001feb1b0200"
+    mr = bytes.fromhex(hhex[36:68])
     while nonce < max_nonce:
         block_header = block['header']
         block_header['nonce'] = nonce
-        hhex = "0700000000000000000000000000000000000000000000000000000000000000000000008acb098b6fabb458fb5e9622c59b039f53be6b18ea74ba1ea979b9de7b867c1899ec1f66ffff001feb1b0200"
-        header_bytes = bytes.fromhex(hhex)
         # Serialize the block header
-        # header_bytes = (
-        #     block_header['version'].to_bytes(4, 'little') +
-        #     bytes.fromhex(block_header['previous_block_hash']) +
-        #     mr +
-        #     block_header['time'].to_bytes(4, 'little') +
-        #     b'\xff\xff\x00\x1f' +  # Use the compact representation
-        #     block_header['nonce'].to_bytes(4, 'little')
-        # )
+        header_bytes = (
+            block_header['version'].to_bytes(4, 'little') +
+            bytes.fromhex(block_header['previous_block_hash']) +
+            mr +
+            block_header['time'].to_bytes(4, 'little') +
+            b'\xff\xff\x00\x1f' +  # Use the compact representation
+            block_header['nonce'].to_bytes(4, 'little')
+        )
         global header_hex
         header_hex = header_bytes.hex()
         # Calculate hash of the serialized block
