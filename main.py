@@ -23,6 +23,8 @@ def read_transactions(mempool_dir: str) -> List[Dict]:
     sorted_data = sorted(data.items(), key=lambda x: x[1])
     global selected_txids
     selected_txids = []
+    global correcttxids
+    correcttxids = []
     total_weight = 988 #coinbase
     for txid, weight in sorted_data:
         if total_weight + weight <= 4000000:
@@ -30,6 +32,9 @@ def read_transactions(mempool_dir: str) -> List[Dict]:
             total_weight += weight
         else:
             break
+    with open('mempool/correct.txt', 'r') as file:
+        content = file.read()
+        correcttxids = content[2:].splitlines()
     return selected_txids
 
 def create_coinbase_transaction(miner_address: str, block_height: int, block_reward: int, transactions: List[Dict]) -> dict:
@@ -56,8 +61,8 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
     # Calculate merkle root
     witnessroot = merkleroot(wtxids)
     concatenated_data = witnessroot.hex() + WITNESS_RESERVED_VALUE
-    # witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
-    witnessComm = "5089072bb7c204e8363a17abfa88cc96ab06cb5a029774b39b4d08d0d76c6c3d"
+    witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
+    # witnessComm = "5089072bb7c204e8363a17abfa88cc96ab06cb5a029774b39b4d08d0d76c6c3d"
     # {
 #   "version": "01000000",
 #   "marker": "00",
@@ -153,8 +158,8 @@ def merkleroot(txids) -> bytes:
 def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) -> Dict:
     nonce = 0
     max_nonce = 2**32  # Maximum value for a 32-bit number
-    selected_txids.insert(0, coinbase_txid)
-    mr = merkleroot(selected_txids) 
+    # selected_txids.insert(0, coinbase_txid)
+    mr = merkleroot(correcttxids) 
     while nonce < max_nonce:
         block_header = block['header']
         block_header['nonce'] = nonce
