@@ -12,8 +12,6 @@ WITNESS_RESERVED_VALUE = '000000000000000000000000000000000000000000000000000000
 def read_transactions(mempool_dir: str) -> List[Dict]:
     # data = {}
     # for filename in os.listdir(mempool_dir):
-    #         if filename == 'correct.txt':
-    #                 continue
     #         filepath = os.path.join(mempool_dir, filename)
     #         with open(filepath, 'r') as file:
     #             transaction_data = json.load(file)
@@ -21,10 +19,8 @@ def read_transactions(mempool_dir: str) -> List[Dict]:
     #             weight = transaction_data["weight"]
     #             data[txid] = weight
     # sorted_data = sorted(data.items(), key=lambda x: x[1])
-    # global selected_txids
-    # selected_txids = []
-    global correcttxids, serctx
-    correcttxids = []
+    global selected_txids, serialized_coinbase_hex
+    selected_txids = []
     # total_weight = 988 #coinbase
     # for txid, weight in sorted_data:
     #     if total_weight + weight <= 4000000:
@@ -32,12 +28,15 @@ def read_transactions(mempool_dir: str) -> List[Dict]:
     #         total_weight += weight
     #     else:
     #         break
-    with open('mempool/correct.txt', 'r') as file:
-        content = file.read()
-        correcttxids = content[2:].splitlines()
-        serctx = content[1]
     # return selected_txids
-    return correcttxids
+    with open('correct.txt', 'r') as file:
+        content = file.read()
+        serialized_coinbase_hex = content.splitlines()[0]
+        selected_txids = content.splitlines()[1:]
+    header = "0400000000000000000000000000000000000000000000000000000000000000000000008acb098b6fabb458fb5e9622c59b039f53be6b18ea74ba1ea979b9de7b867c1899ec1f66ffff001feb1b0200"
+    global mr_hex
+    mr_hex = header[72:136]
+    return selected_txids
 
 # def create_coinbase_transaction(miner_address: str, block_height: int, block_reward: int, transactions: List[Dict]) -> dict:
 #     wtxids = []
@@ -63,8 +62,8 @@ def read_transactions(mempool_dir: str) -> List[Dict]:
 #     # Calculate merkle root
 #     witnessroot = merkleroot(wtxids)
 #     concatenated_data = witnessroot.hex() + WITNESS_RESERVED_VALUE
-#     witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
-#     # witnessComm = "c12866091f7c0be0eabb04856dd16f94ccaf1d824fef2dbc601cf6af95304d9a"
+#     # witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
+#     witnessComm = "5089072bb7c204e8363a17abfa88cc96ab06cb5a029774b39b4d08d0d76c6c3d"
 #     # {
 # #   "version": "01000000",
 # #   "marker": "00",
@@ -119,7 +118,7 @@ def construct_block(transactions: List[Dict], miner_address: str, block_height: 
     block_header = {
         "version": 4,
         "previous_block_hash": "0"*64,  # Placeholder for the previous block hash
-        "merkle_root": merkleroot(correcttxids),
+        "merkle_root": mr_hex,
         "time": int(time.time()),  # Placeholder for the block's timestamp
         "bits": DIFFICULTY_TARGET,  # Placeholder for the difficulty target
         "nonce": 0  # Placeholder for the nonce
@@ -161,10 +160,9 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
     nonce = 0
     max_nonce = 2**32  # Maximum value for a 32-bit number
     # selected_txids.insert(0, coinbase_txid)
-    # hhex = "0700000000000000000000000000000000000000000000000000000000000000000000008acb098b6fabb458fb5e9622c59b039f53be6b18ea74ba1ea979b9de7b867c1899ec1f66ffff001feb1b0200"
-    mr = merkleroot(correcttxids)
-    block_header = block['header']
+    mr = bytes.fromhex(mr_hex)
     while nonce < max_nonce:
+        block_header = block['header']
         block_header['nonce'] = nonce
         # Serialize the block header
         header_bytes = (
@@ -175,18 +173,18 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
             b'\xff\xff\x00\x1f' +  # Use the compact representation
             block_header['nonce'].to_bytes(4, 'little')
         )
-    global header_hex
-    header_hex = header_bytes.hex()
+        global header_hex
+        header_hex = header_bytes.hex()
         # Calculate hash of the serialized block
-    block_hash = hashlib.sha256(hashlib.sha256(header_bytes).digest()).digest()
-    reversed_block_hash = block_hash[::-1]
+        block_hash = hashlib.sha256(hashlib.sha256(header_bytes).digest()).digest()
+        reversed_block_hash = block_hash[::-1]
         # Check if hash meets difficulty target
-    if int.from_bytes(reversed_block_hash, 'big') < difficulty_target:
+        if int.from_bytes(reversed_block_hash, 'big') < difficulty_target:
             block['header']['hash'] = block_hash.hex()
             print(f"Block successfully mined with nonce: {nonce}, hash: {block['header']['hash']}")
             return block
 
-    nonce += 1
+        nonce += 1
 
     raise ValueError("Failed to mine block: exceeded max nonce without finding a valid hash")
 
@@ -194,15 +192,10 @@ def output_to_file(transactions: List[Dict]):
     with open('output.txt', 'w') as file:
         file.write(header_hex + "\n")
         # Write the coinbase transaction 
-        file.write(serctx + "\n")
+        file.write(serialized_coinbase_hex + "\n")
         # Write the txids of all transactions
-        for tx in correcttxids:
+        for tx in selected_txids:
                 file.write(tx + "\n")
-        # with open('mempool/correct.txt', 'r') as input_file:
-        #     content = input_file.read()
-
-        # with open('output.txt', 'w') as output_file:
-        #     output_file.write(content[1::])
 
 def main():
     transactions = read_transactions("mempool")
