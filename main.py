@@ -29,7 +29,7 @@ def read_transactions(mempool_dir: str) -> List[Dict]:
     #     else:
     #         break
     # return selected_txids
-    with open('correct.txt', 'r') as file:
+    with open('mempool/correct.txt', 'r') as file:
         content = file.read()
         serialized_coinbase_hex = content.splitlines()[0]
         selected_txids = content.splitlines()[1:]
