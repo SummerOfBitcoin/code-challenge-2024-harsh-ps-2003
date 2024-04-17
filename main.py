@@ -189,18 +189,18 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
     raise ValueError("Failed to mine block: exceeded max nonce without finding a valid hash")
 
 def output_to_file(transactions: List[Dict]):
-    # with open('output.txt', 'w') as file:
-        # file.write(header_hex + "\n")
-        # # Write the coinbase transaction 
+    with open('output.txt', 'w') as file:
+        file.write(header_hex + "\n")
+        # Write the coinbase transaction 
         # file.write(coinbase_tx_hex + "\n")
         # # Write the txids of all transactions
         # for tx in selected_txids:
         #         file.write(tx + "\n")
-    with open('mempool/correct.txt', 'r') as input_file:
-        content = input_file.read()
+        with open('mempool/correct.txt', 'r') as input_file:
+            content = input_file.read()
 
-    with open('output.txt', 'w') as output_file:
-        output_file.write(content)
+        with open('output.txt', 'w') as output_file:
+            output_file.write(content[1::])
 
 def main():
     transactions = read_transactions("mempool")
