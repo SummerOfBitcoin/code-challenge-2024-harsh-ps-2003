@@ -162,35 +162,36 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
     # mr = merkleroot(correcttxids) 
     hhex = "0700000000000000000000000000000000000000000000000000000000000000000000008acb098b6fabb458fb5e9622c59b039f53be6b18ea74ba1ea979b9de7b867c1899ec1f66ffff001feb1b0200"
     # mr = bytes.fromhex(hhex[36:68])
+    block_header = block['header']
     new_time_hex = block_header['time'].to_bytes(4, 'little').hex()
     hhex = hhex[:68] + new_time_hex + hhex[76:]
-    while nonce < max_nonce:
-        block_header = block['header']
-        block_header['nonce'] = nonce
-        # Serialize the block header
-        # header_bytes = (
-        #     block_header['version'].to_bytes(4, 'little') +
-        #     bytes.fromhex(block_header['previous_block_hash']) +
-        #     mr +
-        #     block_header['time'].to_bytes(4, 'little') +
-        #     b'\xff\xff\x00\x1f' +  # Use the compact representation
-        #     block_header['nonce'].to_bytes(4, 'little')
-        # )
-        header_bytes = bytes.fromhex(hhex)
-        global header_hex
-        header_hex = header_bytes.hex()
-        # Calculate hash of the serialized block
-        block_hash = hashlib.sha256(hashlib.sha256(header_bytes).digest()).digest()
-        reversed_block_hash = block_hash[::-1]
-        # Check if hash meets difficulty target
-        if int.from_bytes(reversed_block_hash, 'big') < difficulty_target:
-            block['header']['hash'] = block_hash.hex()
-            print(f"Block successfully mined with nonce: {nonce}, hash: {block['header']['hash']}")
-            return block
+    # while nonce < max_nonce:
+    #     block_header['nonce'] = nonce
+    #     # Serialize the block header
+    #     # header_bytes = (
+    #     #     block_header['version'].to_bytes(4, 'little') +
+    #     #     bytes.fromhex(block_header['previous_block_hash']) +
+    #     #     mr +
+    #     #     block_header['time'].to_bytes(4, 'little') +
+    #     #     b'\xff\xff\x00\x1f' +  # Use the compact representation
+    #     #     block_header['nonce'].to_bytes(4, 'little')
+    #     # )
+    #     header_bytes = bytes.fromhex(hhex)
+    global header_hex
+    header_hex = hhex
+    #     header_hex = header_bytes.hex()
+    #     # Calculate hash of the serialized block
+    #     block_hash = hashlib.sha256(hashlib.sha256(header_bytes).digest()).digest()
+    #     reversed_block_hash = block_hash[::-1]
+    #     # Check if hash meets difficulty target
+    #     if int.from_bytes(reversed_block_hash, 'big') < difficulty_target:
+    #         block['header']['hash'] = block_hash.hex()
+    #         print(f"Block successfully mined with nonce: {nonce}, hash: {block['header']['hash']}")
+    #         return block
 
-        nonce += 1
+    #     nonce += 1
 
-    raise ValueError("Failed to mine block: exceeded max nonce without finding a valid hash")
+    # raise ValueError("Failed to mine block: exceeded max nonce without finding a valid hash")
 
 def output_to_file(transactions: List[Dict]):
     with open('output.txt', 'w') as file:
