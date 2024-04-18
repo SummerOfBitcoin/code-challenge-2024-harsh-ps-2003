@@ -10,15 +10,15 @@ MAX_BLOCK_SIZE = 1000000  # 1 MB
 WITNESS_RESERVED_VALUE = '0000000000000000000000000000000000000000000000000000000000000000'
 
 def read_transactions(mempool_dir: str) -> List[Dict]:
-    data = {}
-    for filename in os.listdir(mempool_dir):
-            filepath = os.path.join(mempool_dir, filename)
-            with open(filepath, 'r') as file:
-                transaction_data = json.load(file)
-                txid = transaction_data["txid"]
-                weight = transaction_data["weight"]
-                data[txid] = weight
-    sorted_data = sorted(data.items(), key=lambda x: x[1])
+    # data = {}
+    # for filename in os.listdir(mempool_dir):
+    #         filepath = os.path.join(mempool_dir, filename)
+    #         with open(filepath, 'r') as file:
+    #             transaction_data = json.load(file)
+    #             txid = transaction_data["txid"]
+    #             weight = transaction_data["weight"]
+    #             data[txid] = weight
+    # sorted_data = sorted(data.items(), key=lambda x: x[1])
     global selected_txids, serialized_coinbase_hex
     selected_txids = []
     total_weight = 988 #coinbase
