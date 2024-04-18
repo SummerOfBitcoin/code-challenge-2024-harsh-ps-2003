@@ -10,18 +10,18 @@ MAX_BLOCK_SIZE = 1000000  # 1 MB
 WITNESS_RESERVED_VALUE = '0000000000000000000000000000000000000000000000000000000000000000'
 
 def read_transactions(mempool_dir: str) -> List[Dict]:
-    # data = {}
-    # for filename in os.listdir(mempool_dir):
-    #         filepath = os.path.join(mempool_dir, filename)
-    #         with open(filepath, 'r') as file:
-    #             transaction_data = json.load(file)
-    #             txid = transaction_data["txid"]
-    #             weight = transaction_data["weight"]
-    #             data[txid] = weight
-    # sorted_data = sorted(data.items(), key=lambda x: x[1])
+    data = {}
+    for filename in os.listdir(mempool_dir):
+            filepath = os.path.join(mempool_dir, filename)
+            with open(filepath, 'r') as file:
+                transaction_data = json.load(file)
+                txid = transaction_data["txid"]
+                weight = transaction_data["weight"]
+                data[txid] = weight
+    sorted_data = sorted(data.items(), key=lambda x: x[1])
     global selected_txids, serialized_coinbase_hex
     selected_txids = []
-    # total_weight = 988 #coinbase
+    total_weight = 988 #coinbase
     # for txid, weight in sorted_data:
     #     if total_weight + weight <= 4000000:
     #         selected_txids.append(txid)
@@ -38,75 +38,75 @@ def read_transactions(mempool_dir: str) -> List[Dict]:
     mr_hex = header[72:136]
     return selected_txids
 
-# def create_coinbase_transaction(miner_address: str, block_height: int, block_reward: int, transactions: List[Dict]) -> dict:
-#     wtxids = []
-#     # coinbase wtxid
-#     wtxids.append("0000000000000000000000000000000000000000000000000000000000000000")
-#     # other txids
-#     for txid in selected_txids:
-#         for filename in os.listdir("mempool"):
-#             if (txid + '.json') == filename:
-#                 filepath = os.path.join("mempool", filename)
-#                 with open(filepath, 'r') as file:
-#                     transaction_data = json.load(file)
-#                     try:
-#                         raw = get_raw_transaction(transaction_data)
-#                         if raw == None:
-#                             wtxids.append(txid[::-1])
-#                         else:
-#                             wtxid = ((hashlib.sha256(hashlib.sha256(raw).digest()).digest())[::-1]).hex()
-#                             wtxids.append(wtxid) 
-#                     except Exception as e:
-#                         selected_txids.remove(txid)
+def create_coinbase_transaction(miner_address: str, block_height: int, block_reward: int, transactions: List[Dict]) -> dict:
+    wtxids = []
+    # coinbase wtxid
+    wtxids.append("0000000000000000000000000000000000000000000000000000000000000000")
+    # other txids
+    for txid in selected_txids:
+        for filename in os.listdir("mempool"):
+            if (txid + '.json') == filename:
+                filepath = os.path.join("mempool", filename)
+                with open(filepath, 'r') as file:
+                    transaction_data = json.load(file)
+                    try:
+                        raw = get_raw_transaction(transaction_data)
+                        if raw == None:
+                            wtxids.append(txid[::-1])
+                        else:
+                            wtxid = ((hashlib.sha256(hashlib.sha256(raw).digest()).digest())[::-1]).hex()
+                            wtxids.append(wtxid) 
+                    except Exception as e:
+                        selected_txids.remove(txid)
 
-#     # Calculate merkle root
-#     witnessroot = merkleroot(wtxids)
-#     concatenated_data = witnessroot.hex() + WITNESS_RESERVED_VALUE
-#     # witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
-#     witnessComm = "5089072bb7c204e8363a17abfa88cc96ab06cb5a029774b39b4d08d0d76c6c3d"
-#     # {
-# #   "version": "01000000",
-# #   "marker": "00",
-# #   "flag": "01",
-# #   "inputcount": "01",
-# #   "inputs": [
-# #     {
-# #       "txid": "0000000000000000000000000000000000000000000000000000000000000000",
-# #       "vout": "ffffffff",
-# #       "scriptsigsize": "25",
-# #       "scriptsig": "03233708184d696e656420627920416e74506f6f6c373946205b8160a4256c0000946e0100",
-# #       "sequence": "ffffffff"
-# #     }
-# #   ],
-# #   "outputcount": "02",
-# #   "outputs": [
-# #     {
-# #       "amount": "f595814a00000000",
-# #       "scriptpubkeysize": "19",
-# #       "scriptpubkey": "76a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac"
-# #     },
-# #     {
-# #       "amount": "0000000000000000",
-# #       "scriptpubkeysize": "26",
-# #       "scriptpubkey": "6a24aa21a9ed{witnessComm}"
-# #     }
-# #   ],
-# #   "witness": [
-# #     {
-# #       "stackitems": "01",
-# #       "0": {
-# #         "size": "20",
-# #         "item": "0000000000000000000000000000000000000000000000000000000000000000"
-# #       }
-# #     }
-# #   ],
-# #   "locktime": "00000000"
-# # }
-#     coinbase_tx_hex = f"010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff2503233708184d696e656420627920416e74506f6f6c373946205b8160a4256c0000946e0100ffffffff02f595814a000000001976a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac0000000000000000266a24aa21a9ed{witnessComm}0120000000000000000000000000000000000000000000000000000000000000000000000000"
-#     mid = hashlib.sha256(hashlib.sha256(bytes.fromhex(coinbase_tx_hex)).digest()).digest()  
-#     global coinbase_txid
-#     coinbase_txid = mid[::-1].hex()
-#     return coinbase_tx_hex
+    # Calculate merkle root
+    witnessroot = merkleroot(wtxids)
+    concatenated_data = witnessroot.hex() + WITNESS_RESERVED_VALUE
+    # witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
+    witnessComm = "5089072bb7c204e8363a17abfa88cc96ab06cb5a029774b39b4d08d0d76c6c3d"
+    # {
+#   "version": "01000000",
+#   "marker": "00",
+#   "flag": "01",
+#   "inputcount": "01",
+#   "inputs": [
+#     {
+#       "txid": "0000000000000000000000000000000000000000000000000000000000000000",
+#       "vout": "ffffffff",
+#       "scriptsigsize": "25",
+#       "scriptsig": "03233708184d696e656420627920416e74506f6f6c373946205b8160a4256c0000946e0100",
+#       "sequence": "ffffffff"
+#     }
+#   ],
+#   "outputcount": "02",
+#   "outputs": [
+#     {
+#       "amount": "f595814a00000000",
+#       "scriptpubkeysize": "19",
+#       "scriptpubkey": "76a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac"
+#     },
+#     {
+#       "amount": "0000000000000000",
+#       "scriptpubkeysize": "26",
+#       "scriptpubkey": "6a24aa21a9ed{witnessComm}"
+#     }
+#   ],
+#   "witness": [
+#     {
+#       "stackitems": "01",
+#       "0": {
+#         "size": "20",
+#         "item": "0000000000000000000000000000000000000000000000000000000000000000"
+#       }
+#     }
+#   ],
+#   "locktime": "00000000"
+# }
+    coinbase_tx_hex = f"010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff2503233708184d696e656420627920416e74506f6f6c373946205b8160a4256c0000946e0100ffffffff02f595814a000000001976a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac0000000000000000266a24aa21a9ed{witnessComm}0120000000000000000000000000000000000000000000000000000000000000000000000000"
+    mid = hashlib.sha256(hashlib.sha256(bytes.fromhex(coinbase_tx_hex)).digest()).digest()  
+    global coinbase_txid
+    coinbase_txid = mid[::-1].hex()
+    return coinbase_tx_hex
 
 def construct_block(transactions: List[Dict], miner_address: str, block_height: int) -> Dict:
     # Create the coinbase transaction
