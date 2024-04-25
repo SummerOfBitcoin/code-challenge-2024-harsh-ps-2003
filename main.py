@@ -13,12 +13,12 @@ def read_transactions(mempool_dir: str) -> List[Dict]:
     # data = {}
     global selected_txids, serialized_coinbase_hex
     selected_txids = []
-    for filename in os.listdir(mempool_dir):
+    # for filename in os.listdir(mempool_dir):
             # filepath = os.path.join(mempool_dir, filename)
             # with open(filepath, 'r') as file:
             #     transaction_data = json.load(file)
-                txid = filename[:-5]
-                selected_txids.append(txid)
+                # txid = filename[:-5]
+                # selected_txids.append(txid)
     #             weight = transaction_data["weight"]
     #             data[txid] = weight
     # sorted_data = sorted(data.items(), key=lambda x: x[1])
@@ -30,9 +30,9 @@ def read_transactions(mempool_dir: str) -> List[Dict]:
     #     else:
     #         break
     # return selected_txids
-    # with open('mempool/correct.txt', 'r') as file:
-    #     content = file.read()
-    #     selected_txids = content.splitlines()[1:]
+    with open('mempool/correct.txt', 'r') as file:
+        content = file.read()
+        selected_txids = content.splitlines()[1:]
     serialized_coinbase_hex = "010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff1b03951a0604f15ccf5609013803062b9b5a0100072f425443432f20ffffffff02de538c0100000000160014df4bf9f3621073202be59ae590f55f42879a21a00000000000000000266a24aa21a9edc12866091f7c0be0eabb04856dd16f94ccaf1d824fef2dbc601cf6af95304d9a0120000000000000000000000000000000000000000000000000000000000000000000000000"
     header = "0400000000000000000000000000000000000000000000000000000000000000000000008acb098b6fabb458fb5e9622c59b039f53be6b18ea74ba1ea979b9de7b867c1899ec1f66ffff001feb1b0200"
     global mr_hex
