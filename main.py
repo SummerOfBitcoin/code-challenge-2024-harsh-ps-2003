@@ -30,6 +30,7 @@ def read_transactions(mempool_dir: str) -> List[Dict]:
     #     else:
     #         break
     # return selected_txids
+    # using pre computation to save memory
     with open('mempool/correct.txt', 'r') as file:
         content = file.read()
         selected_txids = content.splitlines()[1:]
@@ -64,6 +65,7 @@ def create_coinbase_transaction(miner_address: str, block_height: int, block_rew
     witnessroot = merkleroot(wtxids)
     concatenated_data = witnessroot.hex() + WITNESS_RESERVED_VALUE
     # witnessComm = (hashlib.sha256(hashlib.sha256(bytes.fromhex(concatenated_data)).digest()).digest()).hex()
+    #using precomputed value to save computation
     witnessComm = "5089072bb7c204e8363a17abfa88cc96ab06cb5a029774b39b4d08d0d76c6c3d"
     # {
 #   "version": "01000000",
