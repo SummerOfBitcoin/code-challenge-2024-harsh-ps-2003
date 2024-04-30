@@ -27,12 +27,40 @@ function validateTransactions(transactions):
             validTransactions.append(transaction)
     return validTransactions
 
+/*
+merkleroot:
+   - Initialize a list for transaction IDs
+   - For each transaction ID, reverse it and append to the list
+   - While there are more than one transaction IDs, combine them in pairs and compute their hash
+   - Continue until only one hash remains, which is the merkle root
+   - Return the merkle root
+*/
+
+/*
+construct_block:
+   - Create the coinbase transaction and add it to the list of transactions
+   - Construct the block header with version, previous block hash, merkle root, timestamp, difficulty target, and nonce
+   - Assemble the block with the header and transactions
+   - Return the block
+
+*/
 function constructBlock(validTransactions):
     block = new Block()
     block.addCoinbaseTransaction()
     for transaction in validTransactions:
         block.addTransaction(transaction)
     return block
+
+/*
+mine_block:
+   - Initialize nonce and set maximum nonce
+   - While nonce is less than maximum:
+     - Serialize the block header
+     - Compute the hash of the serialized header
+     - If the hash meets the difficulty target, update the block with the successful hash and return it
+     - Increment the nonce
+   - If no valid hash is found, raise an error
+*/
 
 function mineBlock(block, difficultyTarget):
     nonce = 0

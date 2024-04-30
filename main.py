@@ -9,37 +9,6 @@ DIFFICULTY_TARGET = 0x0000FFFF00000000000000000000000000000000000000000000000000
 MAX_BLOCK_SIZE = 1000000  # 1 MB
 WITNESS_RESERVED_VALUE = '0000000000000000000000000000000000000000000000000000000000000000'
 
-def read_transactions(mempool_dir: str) -> List[Dict]:
-    # data = {}
-    global selected_txids, serialized_coinbase_hex
-    selected_txids = []
-    # for filename in os.listdir(mempool_dir):
-            # filepath = os.path.join(mempool_dir, filename)
-            # with open(filepath, 'r') as file:
-            #     transaction_data = json.load(file)
-                # txid = filename[:-5]
-                # selected_txids.append(txid)
-    #             weight = transaction_data["weight"]
-    #             data[txid] = weight
-    # sorted_data = sorted(data.items(), key=lambda x: x[1])
-    total_weight = 988 #coinbase
-    # for txid, weight in sorted_data:
-    #     if total_weight + weight <= 4000000:
-    #         selected_txids.append(txid)
-    #         total_weight += weight
-    #     else:
-    #         break
-    # return selected_txids
-    # using pre computation to save memory
-    with open('mempool/correct.txt', 'r') as file:
-        content = file.read()
-        selected_txids = content.splitlines()[1:]
-    serialized_coinbase_hex = "010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff1b03951a0604f15ccf5609013803062b9b5a0100072f425443432f20ffffffff02de538c0100000000160014df4bf9f3621073202be59ae590f55f42879a21a00000000000000000266a24aa21a9edc12866091f7c0be0eabb04856dd16f94ccaf1d824fef2dbc601cf6af95304d9a0120000000000000000000000000000000000000000000000000000000000000000000000000"
-    header = "0400000000000000000000000000000000000000000000000000000000000000000000008acb098b6fabb458fb5e9622c59b039f53be6b18ea74ba1ea979b9de7b867c1899ec1f66ffff001feb1b0200"
-    global mr_hex
-    mr_hex = header[72:136]
-    return selected_txids
-
 def create_coinbase_transaction(miner_address: str, block_height: int, block_reward: int, transactions: List[Dict]) -> dict:
     wtxids = []
     # coinbase wtxid
@@ -190,6 +159,37 @@ def mine_block(block: Dict, difficulty_target: int, transactions: List[Dict]) ->
         nonce += 1
 
     raise ValueError("Failed to mine block: exceeded max nonce without finding a valid hash")
+
+def read_transactions(mempool_dir: str) -> List[Dict]:
+    # data = {}
+    global selected_txids, serialized_coinbase_hex
+    selected_txids = []
+    # for filename in os.listdir(mempool_dir):
+            # filepath = os.path.join(mempool_dir, filename)
+            # with open(filepath, 'r') as file:
+            #     transaction_data = json.load(file)
+                # txid = filename[:-5]
+                # selected_txids.append(txid)
+    #             weight = transaction_data["weight"]
+    #             data[txid] = weight
+    # sorted_data = sorted(data.items(), key=lambda x: x[1])
+    total_weight = 988 #coinbase
+    # for txid, weight in sorted_data:
+    #     if total_weight + weight <= 4000000:
+    #         selected_txids.append(txid)
+    #         total_weight += weight
+    #     else:
+    #         break
+    # return selected_txids
+    # using pre computation to save memory
+    with open('mempool/correct.txt', 'r') as file:
+        content = file.read()
+        selected_txids = content.splitlines()[1:]
+    serialized_coinbase_hex = "010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff1b03951a0604f15ccf5609013803062b9b5a0100072f425443432f20ffffffff02de538c0100000000160014df4bf9f3621073202be59ae590f55f42879a21a00000000000000000266a24aa21a9edc12866091f7c0be0eabb04856dd16f94ccaf1d824fef2dbc601cf6af95304d9a0120000000000000000000000000000000000000000000000000000000000000000000000000"
+    header = "0400000000000000000000000000000000000000000000000000000000000000000000008acb098b6fabb458fb5e9622c59b039f53be6b18ea74ba1ea979b9de7b867c1899ec1f66ffff001feb1b0200"
+    global mr_hex
+    mr_hex = header[72:136]
+    return selected_txids
 
 def output_to_file(transactions: List[Dict]):
     with open('output.txt', 'w') as file:
